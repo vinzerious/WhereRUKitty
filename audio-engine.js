@@ -1,7 +1,7 @@
 /**
- * WhereRUKitty — Feline Bioacoustic & Physical-Modeling Sound Engine
+ * MeowMeow-BokBok — Feline & Canine Bioacoustic Sound Engine
  * Uses Web Audio API formant synthesis, modal resonance, and stochastic impulse modeling
- * to generate 12 distinct feline vocalizations and domestic lure acoustics offline.
+ * to generate distinct feline and canine vocalizations and domestic lure acoustics offline.
  */
 
 export const SOUND_CATALOG = [
@@ -374,7 +374,14 @@ export class FelineAudioEngine {
     this.pitch = 1.0;
     this.gentleMode = false;
     this.activeNodes = [];
-    this.customAudioDataUrl = localStorage.getItem('whererukitty_custom_voice') || null;
+    try {
+      this.customAudioDataUrl =
+        localStorage.getItem('meowmeow_bokbok_custom_voice') ||
+        localStorage.getItem('whererukitty_custom_voice') ||
+        null;
+    } catch (_) {
+      this.customAudioDataUrl = null;
+    }
     this.activeCustomAudioEl = null;
     this.simulatedSpikeUntil = 0;
   }
@@ -1510,10 +1517,13 @@ export class FelineAudioEngine {
     this.customAudioDataUrl = dataUrl;
     if (dataUrl) {
       try {
-        localStorage.setItem('whererukitty_custom_voice', dataUrl);
+        localStorage.setItem('meowmeow_bokbok_custom_voice', dataUrl);
       } catch (_) {}
     } else {
-      localStorage.removeItem('whererukitty_custom_voice');
+      try {
+        localStorage.removeItem('meowmeow_bokbok_custom_voice');
+        localStorage.removeItem('whererukitty_custom_voice');
+      } catch (_) {}
     }
   }
 

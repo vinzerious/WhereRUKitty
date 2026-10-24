@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-10-24T16:26:00+07:00",
-  "title": "Design System: WhereRUKitty",
+  "title": "Design System: MeowMeow-BokBok",
   "extensions": {
     "colorMeta": {
       "salmon-coral": {
@@ -143,7 +143,7 @@
   ],
   "narrative": {
     "northStar": "The Coastal Apothecary & Gourmet Tin",
-    "overview": "WhereRUKitty is an Operate-mode handheld utility used by cat owners walking through rooms, peeking under beds, and checking closets with a phone or tablet in one hand. Its visual language draws from gourmet wet cat food tin lithography and clean veterinary apothecary labels: a Deep Sardine Navy top shell that anchors the live Call-and-Listen transport deck, paired with Cool Harbor Pewter and Porcelain surfaces that keep the 12 acoustic triggers scannable at a glance.\n\nEvery visual decision serves the core acoustic ritual: calling the cat for a timed window, then falling silent so the owner and the Ear-Perk microphone radar can catch a faint meow reply. Colors encode real acoustic states rather than decoration, and a one-tap Dim-Room mode plus an Under-Sofa Screen Torch adapt the surface for dark corners without blinding the user or startling a timid cat.",
+    "overview": "MeowMeow-BokBok is an Operate-mode handheld utility used by cat and dog owners walking through rooms, peeking under beds, and checking closets with a phone or tablet in one hand. Its visual language draws from gourmet wet cat food tin lithography and clean veterinary apothecary labels: a Deep Sardine Navy top shell that anchors the live Call-and-Listen transport deck, paired with Cool Harbor Pewter and Porcelain surfaces that keep the 12 acoustic triggers scannable at a glance.\n\nEvery visual decision serves the core acoustic ritual: calling the cat or dog for a timed window, then falling silent so the owner and the Ear-Perk microphone radar can catch a faint reply. Colors encode real acoustic states rather than decoration, and a one-tap Dim-Room mode plus an Under-Sofa Screen Torch adapt the surface for dark corners without blinding the user or startling a timid pet.",
     "keyCharacteristics": [
       "Committed Deep Sardine Navy shell contrasting against Cool Harbor Pewter and Porcelain work panels",
       "Semantic three-state acoustic signaling: Salmon-Coral for active emission, Marigold Amber for the silent listening window, and Cat-Eye Emerald for detected feline replies",

@@ -1,7 +1,7 @@
 {
-  "name": "WhereRUKitty — เหมียวอยู่ไหน เรียกแมวออกจากที่ซ่อน",
+  "name": "WhereRUKitty & WhereRUDoggy — เรียกแมวและสุนัขออกจากที่ซ่อน",
   "short_name": "WhereRUKitty",
-  "description": "เว็บแอปส่งเสียงเรียกแมวและเรดาร์ฟังเสียงขานรับ สำหรับมือถือและแท็บเล็ต",
+  "description": "เว็บแอปส่งเสียงเรียกแมวและสุนัขออกจากที่ซ่อนและเรดาร์ฟังเสียงขานรับ สำหรับมือถือและแท็บเล็ต",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "any",

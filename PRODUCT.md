@@ -19,11 +19,11 @@ delegated: Vanilla HTML5, Modern CSS (Container Queries, Dynamic Viewport Units 
 
 ## Product Purpose
 
-**WhereRUKitty (เหมียวอยู่ไหน)** is a mobile- and tablet-first acoustic cat-caller and hiding-spot locator web application. Success means the user can immediately launch a sound or an automated **Call & Listen Cycle (ส่งเสียงเรียก → เว้นจังหวะเงียบฟังเสียงขานรับ)** with one thumb, adjust pitch/frequency or cat mood presets, see real-time microphone sound-level spikes during the listening window when the cat meows or rustles, use a built-in screen/camera torch to check dark corners, and track checked hiding spots.
+**MeowMeow-BokBok (เหมียวเหมียว-บ็อกบ็อก)** is a mobile- and tablet-first acoustic pet-caller and hiding-spot locator web application for cats and dogs. Success means the user can immediately launch a sound or an automated **Call & Listen Cycle (ส่งเสียงเรียก → เว้นจังหวะเงียบฟังเสียงขานรับ)** with one thumb, adjust pitch/frequency or pet mood presets, see real-time microphone sound-level spikes during the listening window when the cat meows or dog whimpers/barks, use a built-in screen/camera torch to check dark corners, and track checked hiding spots.
 
 ## Positioning
 
-Unlike generic novelty soundboards that play a flat 1-second clip and force constant tapping (or play continuous noise that masks the cat's quiet reply), **WhereRUKitty** is built around an **Acoustic Call-and-Listen Cycle (ระบบสลับส่งเสียงเรียกและเงียบฟังเสียงตอบรับอัตโนมัติ)**: it pairs multi-layered formant & physical-modeling cat/lure acoustics with a timed **Quiet Listening Window** backed by a live microphone dB/frequency monitor that visually flags faint meows or movement when the room goes quiet.
+Unlike generic novelty soundboards that play a flat 1-second clip and force constant tapping (or play continuous noise that masks the pet's quiet reply), **MeowMeow-BokBok** is built around an **Acoustic Call-and-Listen Cycle (ระบบสลับส่งเสียงเรียกและเงียบฟังเสียงตอบรับอัตโนมัติ)**: it pairs multi-layered formant & physical-modeling cat/dog lure acoustics with a timed **Quiet Listening Window** backed by a live microphone dB/frequency monitor that visually flags faint vocalizations or movement when the room goes quiet.
 
 ## Operating Context
 
@@ -33,7 +33,7 @@ Unlike generic novelty soundboards that play a flat 1-second clip and force cons
 
 ## Capabilities and Constraints
 
-- **Instant Species Mode Toggle (`โหมดแมว` ↔ `โหมดสุนัข`):** Segmented toggle button in the top header shell (`#speciesCatBtn` / `#speciesDogBtn`) that switches the entire app between **Cat Mode (`เหมียวอยู่ไหน WhereRUKitty`)** and **Dog Mode (`ตูบอยู่ไหน WhereRUDoggy`)**, swapping the brand emblem, 12 acoustic synthesizers, 4 scenario presets, radar simulation, and 8 default hiding spots.
+- **Instant Species Mode Toggle (`โหมดแมว` ↔ `โหมดสุนัข`):** Segmented toggle button in the top header shell (`#speciesCatBtn` / `#speciesDogBtn`) that switches the entire app between **Cat Mode (`MeowMeow-BokBok · เหมียวเหมียว`)** and **Dog Mode (`MeowMeow-BokBok · บ็อกบ็อก`)**, swapping the brand emblem, 12 acoustic synthesizers, 4 scenario presets, radar simulation, and 8 default hiding spots.
 - **12 Formant & Physical-Modeling Sound Generators per Species Mode across 4 Tactical Categories:**
   1. **โหมดเรียกให้ร้อง/เห่าตอบ (Vocal Reply Triggers):**
      - *Cat Mode:* แม่แมวเรียกหาลูก (Mother Trill `Prrt-ek`), ลูกแมวร้องหาแม่ (Lost Kitten Mew), เหมียวทักทายอ้อนๆ (Friendly Greeting Meow), กรนครืดๆ + เรียกสั้นๆ (Comfort Purr & Chirp).

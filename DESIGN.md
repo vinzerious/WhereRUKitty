@@ -1,5 +1,5 @@
 ---
-name: WhereRUKitty
+name: MeowMeow-BokBok
 description: Handheld feline acoustic caller and listening-window radar for mobile and tablet
 colors:
   salmon-coral: "#B83227"
@@ -105,13 +105,13 @@ components:
     padding: "18px"
 ---
 
-# Design System: WhereRUKitty
+# Design System: MeowMeow-BokBok
 
 ## Overview
 
 **Creative North Star: "The Coastal Apothecary & Gourmet Tin"**
 
-WhereRUKitty is an Operate-mode handheld utility used by cat owners walking through rooms, peeking under beds, and checking closets with a phone or tablet in one hand. Its visual language draws from gourmet wet cat food tin lithography and clean veterinary apothecary labels: a Deep Sardine Navy top shell that anchors the live Call-and-Listen transport deck, paired with Cool Harbor Pewter and Porcelain surfaces that keep the 12 acoustic triggers scannable at a glance.
+MeowMeow-BokBok is an Operate-mode handheld utility used by cat and dog owners walking through rooms, peeking under beds, and checking closets with a phone or tablet in one hand. Its visual language draws from gourmet wet cat food tin lithography and clean veterinary apothecary labels: a Deep Sardine Navy top shell that anchors the live Call-and-Listen transport deck, paired with Cool Harbor Pewter and Porcelain surfaces that keep the 12 acoustic triggers scannable at a glance.
 
 Every visual decision serves the core acoustic ritual: calling the cat for a timed window, then falling silent so the owner and the Ear-Perk microphone radar can catch a faint meow reply. Colors encode real acoustic states rather than decoration, and a one-tap Dim-Room mode plus an Under-Sofa Screen Torch adapt the surface for dark corners without blinding the user or startling a timid cat.
 
@@ -222,7 +222,7 @@ Surfaces rely primarily on structural 1px borders (`#CBD5E1` in Day mode, `#283C
 - **Top Header & Mobile Thumb Bar:** Top header holds the brand lockup, Dim-Room theme switch, and Under-Sofa Torch dialog trigger. On viewports `< 768px`, a fixed 4-action bottom thumb bar keeps Start/Stop Loop, Mother Cat Call, Wet Can Open, and Torch within immediate thumb reach.
 
 ### Dual-Phase Call & Listen Transport Deck
-The signature component of WhereRUKitty sits inside the Deep Sardine Navy header shell. It pairs a two-segment timeline meter (`1. ส่งเสียงเรียก` in Salmon-Coral vs. `2. เงียบฟังเสียงเหมียวตอบ` in Marigold Amber) with a 24-bar HTML5 Canvas frequency spectrum (`400 Hz – 6.0 kHz`) that switches to Cat-Eye Emerald (`#2CC990`) the instant a sound spike is detected during the listening window.
+The signature component of MeowMeow-BokBok sits inside the Deep Sardine Navy header shell. It pairs a two-segment timeline meter (`1. ส่งเสียงเรียก` in Salmon-Coral vs. `2. เงียบฟังเสียงเหมียวตอบ` in Marigold Amber) with a 24-bar HTML5 Canvas frequency spectrum (`400 Hz – 6.0 kHz`) that switches to Cat-Eye Emerald (`#2CC990`) the instant a sound spike is detected during the listening window.
 
 ## Do's and Don'ts
 

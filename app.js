@@ -32,18 +32,60 @@ const DOG_DEFAULT_HIDING_SPOTS = [
   { id: 'dog-spot-8', name: 'ในกรง/เบาะนอนประจำ หรือกองผ้าห่ม', room: 'ห้องนอน / ใต้เตียง', checked: false }
 ];
 
+const safeStorage = {
+  getItem(key, fallback = null) {
+    try {
+      const val = localStorage.getItem(key);
+      if (val !== null) return val;
+      const legacyKey = key.replace(/^meowmeow_bokbok_/, 'whererukitty_');
+      if (legacyKey !== key) {
+        const legacyVal = localStorage.getItem(legacyKey);
+        if (legacyVal !== null) {
+          try {
+            localStorage.setItem(key, legacyVal);
+          } catch (_) {}
+          return legacyVal;
+        }
+      }
+      return fallback;
+    } catch (_) {
+      return fallback;
+    }
+  },
+  setItem(key, val) {
+    try {
+      localStorage.setItem(key, String(val));
+    } catch (_) {}
+  },
+  removeItem(key) {
+    try {
+      localStorage.removeItem(key);
+      const legacyKey = key.replace(/^meowmeow_bokbok_/, 'whererukitty_');
+      if (legacyKey !== key) {
+        localStorage.removeItem(legacyKey);
+      }
+    } catch (_) {}
+  }
+};
+
 const audioEngine = new FelineAudioEngine();
 
 const state = {
-  species: localStorage.getItem('whererukitty_species') || 'cat',
-  theme: localStorage.getItem('whererukitty_theme') || 'day',
+  species: safeStorage.getItem('meowmeow_bokbok_species', 'cat'),
+  theme: safeStorage.getItem('meowmeow_bokbok_theme', 'day'),
   activePresetId: 'vocal-reply',
   activeCategory: 'all',
   selectedSoundId: 'mother-trill',
   currentlyPlayingSoundId: null,
   queue: ['mother-trill', 'kitten-mew', 'wet-can'],
   queueIndex: 0,
-  workedSounds: JSON.parse(localStorage.getItem('whererukitty_worked') || '["mother-trill", "wet-can"]'),
+  workedSounds: (() => {
+    try {
+      return JSON.parse(safeStorage.getItem('meowmeow_bokbok_worked', '["mother-trill", "wet-can"]'));
+    } catch (_) {
+      return ['mother-trill', 'wet-can'];
+    }
+  })(),
   callSeconds: 3,
   listenSeconds: 4,
   volume: 85,
@@ -60,13 +102,25 @@ const state = {
   lastDetectionLoggedAt: 0,
 
   activeRoom: 'ห้องนอน / ใต้เตียง',
-  detectionLog: JSON.parse(localStorage.getItem('whererukitty_detections') || '[]'),
-  hidingSpots: JSON.parse(localStorage.getItem('whererukitty_spots') || JSON.stringify(DEFAULT_HIDING_SPOTS)),
+  detectionLog: (() => {
+    try {
+      return JSON.parse(safeStorage.getItem('meowmeow_bokbok_detections', '[]'));
+    } catch (_) {
+      return [];
+    }
+  })(),
+  hidingSpots: (() => {
+    try {
+      return JSON.parse(safeStorage.getItem('meowmeow_bokbok_spots', JSON.stringify(DEFAULT_HIDING_SPOTS)));
+    } catch (_) {
+      return DEFAULT_HIDING_SPOTS;
+    }
+  })(),
 
   isRecordingVoice: false,
   mediaRecorder: null,
   hardwareTorchSession: null,
-  preferredTorchDeviceId: localStorage.getItem('whererukitty_torch_device') || null,
+  preferredTorchDeviceId: safeStorage.getItem('meowmeow_bokbok_torch_device', null),
   rearCameraList: []
 };
 
@@ -194,11 +248,11 @@ function getDefaultSpots() {
 }
 
 function getSpotsStorageKey() {
-  return state.species === 'dog' ? 'whererukitty_spots_dog' : 'whererukitty_spots';
+  return state.species === 'dog' ? 'meowmeow_bokbok_spots_dog' : 'meowmeow_bokbok_spots';
 }
 
 function getWorkedStorageKey() {
-  return state.species === 'dog' ? 'whererukitty_worked_dog' : 'whererukitty_worked';
+  return state.species === 'dog' ? 'meowmeow_bokbok_worked_dog' : 'meowmeow_bokbok_worked';
 }
 
 /**
@@ -323,9 +377,9 @@ function initTorchDialog() {
       const chosenId = torchLensSelect.value || null;
       state.preferredTorchDeviceId = chosenId;
       if (chosenId) {
-        localStorage.setItem('whererukitty_torch_device', chosenId);
+        safeStorage.setItem('meowmeow_bokbok_torch_device', chosenId);
       } else {
-        localStorage.removeItem('whererukitty_torch_device');
+        safeStorage.removeItem('meowmeow_bokbok_torch_device');
       }
       // Re-acquire hardware torch on the newly selected lens immediately
       if (state.hardwareTorchSession) {
@@ -399,7 +453,7 @@ async function toggleHardwareFlash(explicitDeviceId = undefined) {
     state.hardwareTorchSession = res;
     if (res.deviceId) {
       state.preferredTorchDeviceId = res.deviceId;
-      localStorage.setItem('whererukitty_torch_device', res.deviceId);
+      safeStorage.setItem('meowmeow_bokbok_torch_device', res.deviceId);
     }
     hardwareFlashBtn.setAttribute('aria-pressed', 'true');
     const lensSuffix = res.label ? ` (${res.label})` : '';
@@ -426,7 +480,7 @@ function applyTheme(theme) {
   const isDim = theme === 'dim';
   themeToggleBtn.setAttribute('aria-pressed', String(isDim));
   themeToggleLabel.textContent = isDim ? 'โหมดกลางวัน' : 'โหมดที่มืด';
-  localStorage.setItem('whererukitty_theme', theme);
+  safeStorage.setItem('meowmeow_bokbok_theme', theme);
 }
 
 themeToggleBtn.addEventListener('click', () => {
@@ -437,96 +491,154 @@ themeToggleBtn.addEventListener('click', () => {
  * Species Mode Toggle (Cat Mode ↔ Dog Mode)
  */
 function applySpeciesMode(species, shouldSelectDefaultPreset = true) {
-  if (state.cycleRunning) {
-    stopCallListenCycle();
-  }
+  try {
+    if (state.cycleRunning) {
+      stopCallListenCycle();
+    }
+  } catch (_) {}
+
   state.species = species === 'dog' ? 'dog' : 'cat';
   const isDog = state.species === 'dog';
-  docHtml.setAttribute('data-species', state.species);
-  localStorage.setItem('whererukitty_species', state.species);
 
-  speciesCatBtn.setAttribute('aria-pressed', String(!isDog));
-  speciesDogBtn.setAttribute('aria-pressed', String(isDog));
-  brandIconCat.hidden = isDog;
-  brandIconDog.hidden = !isDog;
+  try {
+    docHtml.setAttribute('data-species', state.species);
+  } catch (_) {}
+
+  safeStorage.setItem('meowmeow_bokbok_species', state.species);
+
+  if (speciesCatBtn) speciesCatBtn.setAttribute('aria-pressed', String(!isDog));
+  if (speciesDogBtn) speciesDogBtn.setAttribute('aria-pressed', String(isDog));
+  if (brandIconCat) brandIconCat.hidden = isDog;
+  if (brandIconDog) brandIconDog.hidden = !isDog;
 
   // Update Header & Brand Copy
-  appTitleText.textContent = isDog ? 'ตูบอยู่ไหน' : 'เหมียวอยู่ไหน';
-  appTitleEn.textContent = isDog ? 'WhereRUDoggy' : 'WhereRUKitty';
-  appSubtitleText.textContent = isDog
-    ? 'เครื่องส่งเสียงเรียกสุนัข นกหวีดความถี่สูง และเรดาร์ฟังเสียงเห่า/ขานรับ'
-    : 'เครื่องส่งเสียงเรียกแมวและเรดาร์ฟังเสียงขานรับสำหรับมือถือ/แท็บเล็ต';
+  if (appTitleText) appTitleText.textContent = 'MeowMeow-BokBok';
+  if (appTitleEn) appTitleEn.textContent = isDog ? '· บ็อกบ็อก (โหมดสุนัข)' : '· เหมียวเหมียว (โหมดแมว)';
+  if (appSubtitleText) {
+    appSubtitleText.textContent = isDog
+      ? 'เครื่องส่งเสียงเรียกสุนัข นกหวีดความถี่สูง และเรดาร์ฟังเสียงเห่า/ขานรับ'
+      : 'เครื่องส่งเสียงเรียกแมวและเรดาร์ฟังเสียงขานรับสำหรับมือถือ/แท็บเล็ต';
+  }
   document.title = isDog
-    ? 'WhereRUDoggy — ตูบอยู่ไหน เรียกสุนัขออกจากที่ซ่อน'
-    : 'WhereRUKitty — เหมียวอยู่ไหน เรียกแมวออกจากที่ซ่อน';
-  openTorchBtnLabel.textContent = isDog ? 'ไฟฉายส่องหาใต้โต๊ะ' : 'ไฟฉายส่องใต้เตียง';
+    ? 'MeowMeow-BokBok — บ็อกบ็อก เรียกสุนัขออกจากที่ซ่อน'
+    : 'MeowMeow-BokBok — เหมียวเหมียว เรียกแมวออกจากที่ซ่อน';
+  if (openTorchBtnLabel) {
+    openTorchBtnLabel.textContent = isDog ? 'ไฟฉายส่องหาใต้โต๊ะ' : 'ไฟฉายส่องใต้เตียง';
+  }
 
   // Update Transport & Spectrum Copy
-  listenPhaseText.textContent = isDog ? '2. เงียบฟังเสียงเห่า/ขานรับ' : '2. เงียบฟังเสียงเหมียวตอบ';
-  spectrumRangeLabel.textContent = isDog
-    ? 'ย่านความถี่หูสุนัข & นกหวีด 180 Hz – 14.0 kHz'
-    : 'ย่านความถี่หูแมว 400 Hz – 6.0 kHz';
+  if (listenPhaseText) {
+    listenPhaseText.textContent = isDog ? '2. เงียบฟังเสียงเห่า/ขานรับ' : '2. เงียบฟังเสียงเหมียวตอบ';
+  }
+  if (spectrumRangeLabel) {
+    spectrumRangeLabel.textContent = isDog
+      ? 'ย่านความถี่หูสุนัข & นกหวีด 180 Hz – 14.0 kHz'
+      : 'ย่านความถี่หูแมว 400 Hz – 6.0 kHz';
+  }
 
   // Update Section Headings & Tabs
-  presetHeading.textContent = isDog
-    ? 'เลือกโหมดตามนิสัยและอาการของสุนัข'
-    : 'เลือกโหมดตามนิสัยและอาการของแมว';
-  soundDeckHeading.textContent = isDog
-    ? 'คลังเสียงเรียกสุนัข นกหวีด และเสียงล่อ 12 ความถี่'
-    : 'คลังเสียงเรียกแมวชีวภาพและเสียงล่อ 12 ความถี่';
-  soundDeckDesc.innerHTML = isDog
-    ? 'แตะที่แถวเพื่อเล่นเสียงทันที · กดปุ่ม <strong>+ คิว</strong> เพื่อใส่ในรอบวนเรียก · กด <strong>หมาหัน</strong> เพื่อจำเสียงที่ได้ผล'
-    : 'แตะที่แถวเพื่อเล่นเสียงทันที · กดปุ่ม <strong>+ คิว</strong> เพื่อใส่ในรอบวนเรียก · กด <strong>แมวหัน</strong> เพื่อจำเสียงที่ได้ผล';
-  tabVocalBtn.textContent = isDog ? 'เรียกให้เห่าตอบ (4)' : 'เรียกให้ร้องตอบ (4)';
-  tabPreyBtn.textContent = isDog ? 'ของเล่น & กริ่งบ้าน (2)' : 'กระตุ้นนักล่า (2)';
+  if (presetHeading) {
+    presetHeading.textContent = isDog
+      ? 'เลือกโหมดตามนิสัยและอาการของสุนัข'
+      : 'เลือกโหมดตามนิสัยและอาการของแมว';
+  }
+  if (soundDeckHeading) {
+    soundDeckHeading.textContent = isDog
+      ? 'คลังเสียงเรียกสุนัข นกหวีด และเสียงล่อ 12 ความถี่'
+      : 'คลังเสียงเรียกแมวชีวภาพและเสียงล่อ 12 ความถี่';
+  }
+  if (soundDeckDesc) {
+    soundDeckDesc.innerHTML = isDog
+      ? 'แตะที่แถวเพื่อเล่นเสียงทันที · กดปุ่ม <strong>+ คิว</strong> เพื่อใส่ในรอบวนเรียก · กด <strong>หมาหัน</strong> เพื่อจำเสียงที่ได้ผล'
+      : 'แตะที่แถวเพื่อเล่นเสียงทันที · กดปุ่ม <strong>+ คิว</strong> เพื่อใส่ในรอบวนเรียก · กด <strong>แมวหัน</strong> เพื่อจำเสียงที่ได้ผล';
+  }
+  if (tabVocalBtn) tabVocalBtn.textContent = isDog ? 'เรียกให้เห่าตอบ (4)' : 'เรียกให้ร้องตอบ (4)';
+  if (tabPreyBtn) tabPreyBtn.textContent = isDog ? 'ของเล่น & กริ่งบ้าน (2)' : 'กระตุ้นนักล่า (2)';
 
   // Update Switches, Radar, Voice Recorder, Checklist & Torch Copy
-  gentleModeTitle.textContent = isDog
-    ? 'โหมดสุนัขกลัวฟ้าร้อง/ประทัด (Gentle Soft-Filter)'
-    : 'โหมดแมวขี้กลัว (Gentle Soft-Filter)';
-  gentleModeDesc.textContent = isDog
-    ? 'กรองความถี่แหลมออกและลดความตกใจ เหมาะกับสุนัขที่กำลังตื่นกลัวเสียงดังหรือหลบใต้โต๊ะ'
-    : 'กรองความถี่แหลมเกิน 3.8 kHz ออกและลดความตกใจ เหมาะกับแมวตื่นกลัวหรือเพิ่งย้ายบ้าน';
-  autoMicDesc.textContent = isDog
-    ? 'วิเคราะห์เสียงเห่า เสียงครางหงิงๆ หรือเสียงขยับตัวเฉพาะตอนที่แอปหยุดส่งเสียง'
-    : 'วิเคราะห์เสียงเหมียวหรือเสียงกุกกักเฉพาะตอนที่แอปหยุดส่งเสียง เพื่อไม่ให้เสียงลำโพงกวนกัน';
-  radarHeading.textContent = isDog
-    ? 'เรดาร์จับเสียงสุนัขเห่า/ขานรับช่วงเงียบ'
-    : 'เรดาร์จับเสียงแมวขานรับช่วงเงียบ';
-  radarDesc.textContent = isDog
-    ? 'เมื่ออยู่ในช่วงเงียบฟังเสียง หากมีเสียงเห่า เสียงคราง หรือเสียงขยับตัว ระบบจะบันทึกเวลาและจุดที่ค้นหาทันที'
-    : 'เมื่ออยู่ในช่วงเงียบฟังเสียง หากมีเสียงร้องเหมียวหรือเสียงขยับตัว ระบบจะบันทึกเวลาและห้องไว้ให้ทันที';
-  simulateReplyBtnText.textContent = isDog ? 'จำลองเสียงสุนัขเห่าตอบ' : 'จำลองเสียงแมวขานรับ';
-  voiceRecorderHeading.textContent = isDog
-    ? 'เสียงคุณเรียกชื่อสุนัขตัวเอง'
-    : 'เสียงคุณเรียกชื่อแมวตัวเอง';
-  voiceRecorderDesc.textContent = isDog
-    ? 'สุนัขจำเสียงเจ้าของเรียกชื่อหรือคำว่า "กินหนม / ไปเที่ยว" ได้แม่นยำที่สุด อัดไว้เปิดวนในคิวได้ทันที'
-    : 'แมวมักจำเสียงเจ้าของเรียกชื่อหรือเสียงเคาะกระปุกขนมประจำบ้านได้ดีที่สุด อัดไว้เปิดวนในคิวได้ทันที';
-  if (!state.isRecordingVoice) {
+  if (gentleModeTitle) {
+    gentleModeTitle.textContent = isDog
+      ? 'โหมดสุนัขกลัวฟ้าร้อง/ประทัด (Gentle Soft-Filter)'
+      : 'โหมดแมวขี้กลัว (Gentle Soft-Filter)';
+  }
+  if (gentleModeDesc) {
+    gentleModeDesc.textContent = isDog
+      ? 'กรองความถี่แหลมออกและลดความตกใจ เหมาะกับสุนัขที่กำลังตื่นกลัวเสียงดังหรือหลบใต้โต๊ะ'
+      : 'กรองความถี่แหลมเกิน 3.8 kHz ออกและลดความตกใจ เหมาะกับแมวตื่นกลัวหรือเพิ่งย้ายบ้าน';
+  }
+  if (autoMicDesc) {
+    autoMicDesc.textContent = isDog
+      ? 'วิเคราะห์เสียงเห่า เสียงครางหงิงๆ หรือเสียงขยับตัวเฉพาะตอนที่แอปหยุดส่งเสียง'
+      : 'วิเคราะห์เสียงเหมียวหรือเสียงกุกกักเฉพาะตอนที่แอปหยุดส่งเสียง เพื่อไม่ให้เสียงลำโพงกวนกัน';
+  }
+  if (radarHeading) {
+    radarHeading.textContent = isDog
+      ? 'เรดาร์จับเสียงสุนัขเห่า/ขานรับช่วงเงียบ'
+      : 'เรดาร์จับเสียงแมวขานรับช่วงเงียบ';
+  }
+  if (radarDesc) {
+    radarDesc.textContent = isDog
+      ? 'เมื่ออยู่ในช่วงเงียบฟังเสียง หากมีเสียงเห่า เสียงคราง หรือเสียงขยับตัว ระบบจะบันทึกเวลาและจุดที่ค้นหาทันที'
+      : 'เมื่ออยู่ในช่วงเงียบฟังเสียง หากมีเสียงร้องเหมียวหรือเสียงขยับตัว ระบบจะบันทึกเวลาและห้องไว้ให้ทันที';
+  }
+  if (simulateReplyBtnText) {
+    simulateReplyBtnText.textContent = isDog ? 'จำลองเสียงสุนัขเห่าตอบ' : 'จำลองเสียงแมวขานรับ';
+  }
+  if (voiceRecorderHeading) {
+    voiceRecorderHeading.textContent = isDog
+      ? 'เสียงคุณเรียกชื่อสุนัขตัวเอง'
+      : 'เสียงคุณเรียกชื่อแมวตัวเอง';
+  }
+  if (voiceRecorderDesc) {
+    voiceRecorderDesc.textContent = isDog
+      ? 'สุนัขจำเสียงเจ้าของเรียกชื่อหรือคำว่า "กินหนม / ไปเที่ยว" ได้แม่นยำที่สุด อัดไว้เปิดวนในคิวได้ทันที'
+      : 'แมวมักจำเสียงเจ้าของเรียกชื่อหรือเสียงเคาะกระปุกขนมประจำบ้านได้ดีที่สุด อัดไว้เปิดวนในคิวได้ทันที';
+  }
+  if (!state.isRecordingVoice && recordVoiceBtnText) {
     recordVoiceBtnText.textContent = isDog ? 'อัดเสียงเรียกชื่อสุนัข (3 วิ)' : 'อัดเสียงเรียกชื่อแมว (3 วิ)';
   }
-  foundPetBtnText.textContent = isDog
-    ? 'เจอตัวเจ้าตูบแล้ว! (หยุดเสียงและบันทึกจุดที่เจอ)'
-    : 'เจอตัวเจ้าเหมียวแล้ว! (หยุดเสียงและบันทึกจุดที่เจอ)';
-  mobilePrimaryCallBtnText.textContent = isDog ? 'ตุ๊กตาบีบ' : 'เสียงแม่แมว';
-  mobileSecondaryCallBtnText.textContent = isDog ? 'เขย่าขนม' : 'เปิดกระป๋อง';
-  torchDialogTitle.textContent = isDog
-    ? 'ไฟฉายส่องหาสุนัขใต้โต๊ะและมุมมืด'
-    : 'ไฟฉายส่องหาแมวใต้เตียงและในตู้มืด';
-  torchInstructionsText.innerHTML = isDog
-    ? 'ดันความสว่างหน้าจอขึ้นแล้วส่องเข้าไปใต้โต๊ะหรือมุมอับ สังเกต <strong>ประกายสะท้อนจากดวงตาสุนัข (Tapetum Lucidum)</strong> พร้อมกดปุ่มบีบตุ๊กตายางด้านล่างเพื่อเรียกให้หันมอง'
-    : 'ดันความสว่างหน้าจอขึ้นแล้วส่องเข้าไปใต้เตียงหรือซอกตู้ สังเกต <strong>ประกายสะท้อนจากดวงตาแมว (Tapetum Lucidum)</strong> พร้อมกดปุ่มส่งเสียงเรียกด้านล่างเพื่อดูว่าแมวหันมามองหรือไม่';
-  torchCallBtnText.textContent = isDog
-    ? 'บีบตุ๊กตายางเรียกขณะส่องไฟ'
-    : 'ส่งเสียงเรียกแม่แมวขณะส่องไฟ';
+  if (foundPetBtnText) {
+    foundPetBtnText.textContent = isDog
+      ? 'เจอตัวเจ้าตูบแล้ว! (หยุดเสียงและบันทึกจุดที่เจอ)'
+      : 'เจอตัวเจ้าเหมียวแล้ว! (หยุดเสียงและบันทึกจุดที่เจอ)';
+  }
+  if (mobilePrimaryCallBtnText) {
+    mobilePrimaryCallBtnText.textContent = isDog ? 'ตุ๊กตาบีบ' : 'เสียงแม่แมว';
+  }
+  if (mobileSecondaryCallBtnText) {
+    mobileSecondaryCallBtnText.textContent = isDog ? 'เขย่าขนม' : 'เปิดกระป๋อง';
+  }
+  if (torchDialogTitle) {
+    torchDialogTitle.textContent = isDog
+      ? 'ไฟฉายส่องหาสุนัขใต้โต๊ะและมุมมืด'
+      : 'ไฟฉายส่องหาแมวใต้เตียงและในตู้มืด';
+  }
+  if (torchInstructionsText) {
+    torchInstructionsText.innerHTML = isDog
+      ? 'ดันความสว่างหน้าจอขึ้นแล้วส่องเข้าไปใต้โต๊ะหรือมุมอับ สังเกต <strong>ประกายสะท้อนจากดวงตาสุนัข (Tapetum Lucidum)</strong> พร้อมกดปุ่มบีบตุ๊กตายางด้านล่างเพื่อเรียกให้หันมอง'
+      : 'ดันความสว่างหน้าจอขึ้นแล้วส่องเข้าไปใต้เตียงหรือซอกตู้ สังเกต <strong>ประกายสะท้อนจากดวงตาแมว (Tapetum Lucidum)</strong> พร้อมกดปุ่มส่งเสียงเรียกด้านล่างเพื่อดูว่าแมวหันมามองหรือไม่';
+  }
+  if (torchCallBtnText) {
+    torchCallBtnText.textContent = isDog
+      ? 'บีบตุ๊กตายางเรียกขณะส่องไฟ'
+      : 'ส่งเสียงเรียกแม่แมวขณะส่องไฟ';
+  }
 
-  // Load species-specific worked sounds & hiding spots
+  // Load species-specific worked sounds & hiding spots safely
   const defaultWorked = isDog ? '["dog-squeaky-toy", "treat-shake"]' : '["mother-trill", "wet-can"]';
-  state.workedSounds = JSON.parse(localStorage.getItem(getWorkedStorageKey()) || defaultWorked);
-  state.hidingSpots = JSON.parse(
-    localStorage.getItem(getSpotsStorageKey()) || JSON.stringify(getDefaultSpots())
-  );
+  try {
+    state.workedSounds = JSON.parse(safeStorage.getItem(getWorkedStorageKey(), defaultWorked));
+  } catch (_) {
+    state.workedSounds = isDog ? ['dog-squeaky-toy', 'treat-shake'] : ['mother-trill', 'wet-can'];
+  }
+
+  try {
+    state.hidingSpots = JSON.parse(
+      safeStorage.getItem(getSpotsStorageKey(), JSON.stringify(getDefaultSpots()))
+    );
+  } catch (_) {
+    state.hidingSpots = getDefaultSpots();
+  }
 
   if (shouldSelectDefaultPreset) {
     const presets = getActivePresets();
@@ -543,17 +655,36 @@ function applySpeciesMode(species, shouldSelectDefaultPreset = true) {
   renderHidingSpots();
 }
 
-speciesCatBtn.addEventListener('click', () => {
-  if (state.species !== 'cat') {
-    applySpeciesMode('cat', true);
+function handleSpeciesSwitch(targetSpecies) {
+  if (!targetSpecies) return;
+  if (targetSpecies !== state.species) {
+    applySpeciesMode(targetSpecies, true);
   }
-});
+}
 
-speciesDogBtn.addEventListener('click', () => {
-  if (state.species !== 'dog') {
-    applySpeciesMode('dog', true);
-  }
-});
+if (speciesCatBtn) {
+  speciesCatBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    handleSpeciesSwitch('cat');
+  });
+}
+
+if (speciesDogBtn) {
+  speciesDogBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    handleSpeciesSwitch('dog');
+  });
+}
+
+const speciesToggleGroup = document.querySelector('.species-toggle-group');
+if (speciesToggleGroup) {
+  speciesToggleGroup.addEventListener('click', (e) => {
+    const btn = e.target.closest('.species-toggle-btn');
+    if (btn && btn.dataset.species) {
+      handleSpeciesSwitch(btn.dataset.species);
+    }
+  });
+}
 
 /**
  * Render Scenario Quick Presets
@@ -767,7 +898,7 @@ function toggleWorkedSound(soundId) {
   } else {
     state.workedSounds.push(soundId);
   }
-  localStorage.setItem(getWorkedStorageKey(), JSON.stringify(state.workedSounds));
+  safeStorage.setItem(getWorkedStorageKey(), JSON.stringify(state.workedSounds));
   renderSoundPads();
 }
 
@@ -1070,7 +1201,7 @@ function recordSoundDetection(label, levelDb) {
   if (state.detectionLog.length > 12) {
     state.detectionLog.pop();
   }
-  localStorage.setItem('whererukitty_detections', JSON.stringify(state.detectionLog));
+  safeStorage.setItem('meowmeow_bokbok_detections', JSON.stringify(state.detectionLog));
 
   radarAlertBanner.dataset.detected = 'true';
   phaseBadge.dataset.phase = 'detected';
@@ -1108,7 +1239,7 @@ function renderDetectionLog() {
 
 clearLogBtn.addEventListener('click', () => {
   state.detectionLog = [];
-  localStorage.setItem('whererukitty_detections', '[]');
+  safeStorage.setItem('meowmeow_bokbok_detections', '[]');
   radarAlertBanner.dataset.detected = 'false';
   radarStatusTitle.textContent = 'สถานะเรดาร์: รอฟังเสียงในจังหวะเงียบ';
   radarStatusSub.textContent = 'ล้างประวัติเรียบร้อยแล้ว พร้อมเริ่มรอบฟังเสียงใหม่';
@@ -1222,7 +1353,7 @@ function renderHidingSpots() {
         state.activeRoom = spot.room;
         activeRoomSelect.value = spot.room;
       }
-      localStorage.setItem(getSpotsStorageKey(), JSON.stringify(state.hidingSpots));
+      safeStorage.setItem(getSpotsStorageKey(), JSON.stringify(state.hidingSpots));
       renderHidingSpots();
     });
 
@@ -1253,7 +1384,7 @@ addSpotForm.addEventListener('submit', (e) => {
     checked: false
   });
   newSpotInput.value = '';
-  localStorage.setItem(getSpotsStorageKey(), JSON.stringify(state.hidingSpots));
+  safeStorage.setItem(getSpotsStorageKey(), JSON.stringify(state.hidingSpots));
   renderHidingSpots();
 });
 
@@ -1263,14 +1394,14 @@ foundCatBtn.addEventListener('click', () => {
   recordSoundDetection(`เจอตัว${petName}ที่ "${state.activeRoom}" แล้ว!`, 82);
   if (!state.workedSounds.includes(state.selectedSoundId) && state.selectedSoundId !== 'custom-voice') {
     state.workedSounds.push(state.selectedSoundId);
-    localStorage.setItem(getWorkedStorageKey(), JSON.stringify(state.workedSounds));
+    safeStorage.setItem(getWorkedStorageKey(), JSON.stringify(state.workedSounds));
     renderSoundPads();
   }
 });
 
 resetChecklistBtn.addEventListener('click', () => {
   state.hidingSpots = getDefaultSpots().map((s) => ({ ...s, checked: false }));
-  localStorage.setItem(getSpotsStorageKey(), JSON.stringify(state.hidingSpots));
+  safeStorage.setItem(getSpotsStorageKey(), JSON.stringify(state.hidingSpots));
   renderHidingSpots();
 });
 
@@ -1374,14 +1505,47 @@ function drawSpectrumCanvas(bars, phase, detected) {
  * Initialize Application
  */
 function init() {
-  applyTheme(state.theme);
-  initAllSliders();
-  initSwitches();
-  initTorchDialog();
-  applySpeciesMode(state.species, true);
-  updateTuningLabels();
-  updateCustomVoiceUI();
-  requestAnimationFrame(renderLoopFrame);
+  try {
+    applyTheme(state.theme);
+  } catch (err) {
+    console.warn('Theme init warning:', err);
+  }
+
+  try {
+    applySpeciesMode(state.species, true);
+  } catch (err) {
+    console.error('Species mode init error:', err);
+  }
+
+  try {
+    initAllSliders();
+  } catch (err) {
+    console.warn('Sliders init warning:', err);
+  }
+
+  try {
+    initSwitches();
+  } catch (err) {
+    console.warn('Switches init warning:', err);
+  }
+
+  try {
+    initTorchDialog();
+  } catch (err) {
+    console.warn('Torch dialog init warning:', err);
+  }
+
+  try {
+    updateTuningLabels();
+  } catch (_) {}
+
+  try {
+    updateCustomVoiceUI();
+  } catch (_) {}
+
+  try {
+    requestAnimationFrame(renderLoopFrame);
+  } catch (_) {}
 }
 
 init();
