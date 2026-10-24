@@ -1,4 +1,14 @@
-import { SOUND_CATALOG, SCENARIO_PRESETS, FelineAudioEngine } from './audio-engine.js';
+import {
+  SOUND_CATALOG,
+  SCENARIO_PRESETS,
+  DOG_SOUND_CATALOG,
+  DOG_SCENARIO_PRESETS,
+  FelineAudioEngine
+} from './audio-engine.js';
+import {
+  acquireHardwareTorch,
+  releaseHardwareTorch
+} from './torch-controller.js';
 
 const DEFAULT_HIDING_SPOTS = [
   { id: 'spot-1', name: 'ใต้เตียงนอน (ลึกชิดหัวเตียง)', room: 'ห้องนอน / ใต้เตียง', checked: false },
@@ -11,9 +21,21 @@ const DEFAULT_HIDING_SPOTS = [
   { id: 'spot-8', name: 'ซอกกระถางต้นไม้ หรือใต้เก้าอี้ระเบียง', room: 'ระเบียง / หลังมุ้งลวด', checked: false }
 ];
 
+const DOG_DEFAULT_HIDING_SPOTS = [
+  { id: 'dog-spot-1', name: 'ใต้โต๊ะทำงาน / ใต้โต๊ะกินข้าว', room: 'ห้องนั่งเล่น / ใต้โซฟา', checked: false },
+  { id: 'dog-spot-2', name: 'ในห้องน้ำ / ข้างโถสุขภัณฑ์ (พื้นกระเบื้องเย็น)', room: 'หลังเครื่องซักผ้า / ห้องน้ำ', checked: false },
+  { id: 'dog-spot-3', name: 'ใต้เตียงนอน หรือซอกข้างฟูก', room: 'ห้องนอน / ใต้เตียง', checked: false },
+  { id: 'dog-spot-4', name: 'หลังโซฟา หรือมุมอับห้องนั่งเล่น', room: 'ห้องนั่งเล่น / ใต้โซฟา', checked: false },
+  { id: 'dog-spot-5', name: 'ใต้บันได หรือในตู้เสื้อผ้าที่เปิดแง้มไว้', room: 'ในตู้เสื้อผ้า / ลิ้นชัก', checked: false },
+  { id: 'dog-spot-6', name: 'ข้างตู้เย็น หรือใต้เคาน์เตอร์ครัว', room: 'ห้องครัว / หลังตู้เย็น', checked: false },
+  { id: 'dog-spot-7', name: 'ซอกกระถางต้นไม้ / พุ่มไม้ริมระเบียง / โรงรถ', room: 'ระเบียง / หลังมุ้งลวด', checked: false },
+  { id: 'dog-spot-8', name: 'ในกรง/เบาะนอนประจำ หรือกองผ้าห่ม', room: 'ห้องนอน / ใต้เตียง', checked: false }
+];
+
 const audioEngine = new FelineAudioEngine();
 
 const state = {
+  species: localStorage.getItem('whererukitty_species') || 'cat',
   theme: localStorage.getItem('whererukitty_theme') || 'day',
   activePresetId: 'vocal-reply',
   activeCategory: 'all',
@@ -43,7 +65,9 @@ const state = {
 
   isRecordingVoice: false,
   mediaRecorder: null,
-  hardwareTorchTrack: null
+  hardwareTorchSession: null,
+  preferredTorchDeviceId: localStorage.getItem('whererukitty_torch_device') || null,
+  rearCameraList: []
 };
 
 // DOM Elements
@@ -57,6 +81,9 @@ const torchSurface = document.getElementById('torchSurface');
 const torchCallBtn = document.getElementById('torchCallBtn');
 const hardwareFlashBtn = document.getElementById('hardwareFlashBtn');
 const hardwareFlashText = document.getElementById('hardwareFlashText');
+const torchLensRow = document.getElementById('torchLensRow');
+const torchLensSelect = document.getElementById('torchLensSelect');
+const torchStatusHint = document.getElementById('torchStatusHint');
 
 const phaseBadge = document.getElementById('phaseBadge');
 const activeSoundTitle = document.getElementById('activeSoundTitle');
@@ -123,24 +150,78 @@ const mobileCycleBtnText = document.getElementById('mobileCycleBtnText');
 const mobileMotherCallBtn = document.getElementById('mobileMotherCallBtn');
 const mobileWetCanBtn = document.getElementById('mobileWetCanBtn');
 const mobileTorchBtn = document.getElementById('mobileTorchBtn');
+const mobilePrimaryCallBtnText = document.getElementById('mobilePrimaryCallBtnText');
+const mobileSecondaryCallBtnText = document.getElementById('mobileSecondaryCallBtnText');
+
+const speciesCatBtn = document.getElementById('speciesCatBtn');
+const speciesDogBtn = document.getElementById('speciesDogBtn');
+const brandIconCat = document.getElementById('brandIconCat');
+const brandIconDog = document.getElementById('brandIconDog');
+const appTitleText = document.getElementById('appTitleText');
+const appTitleEn = document.getElementById('appTitleEn');
+const appSubtitleText = document.getElementById('appSubtitleText');
+const openTorchBtnLabel = document.getElementById('openTorchBtnLabel');
+const listenPhaseText = document.getElementById('listenPhaseText');
+const spectrumRangeLabel = document.getElementById('spectrumRangeLabel');
+const presetHeading = document.getElementById('presetHeading');
+const soundDeckHeading = document.getElementById('soundDeckHeading');
+const soundDeckDesc = document.getElementById('soundDeckDesc');
+const tabVocalBtn = document.getElementById('tabVocalBtn');
+const tabPreyBtn = document.getElementById('tabPreyBtn');
+const gentleModeTitle = document.getElementById('gentleModeTitle');
+const gentleModeDesc = document.getElementById('gentleModeDesc');
+const autoMicDesc = document.getElementById('autoMicDesc');
+const radarHeading = document.getElementById('radarHeading');
+const radarDesc = document.getElementById('radarDesc');
+const simulateReplyBtnText = document.getElementById('simulateReplyBtnText');
+const voiceRecorderHeading = document.getElementById('voiceRecorderHeading');
+const voiceRecorderDesc = document.getElementById('voiceRecorderDesc');
+const foundPetBtnText = document.getElementById('foundPetBtnText');
+const torchDialogTitle = document.getElementById('torchDialogTitle');
+const torchInstructionsText = document.getElementById('torchInstructionsText');
+const torchCallBtnText = document.getElementById('torchCallBtnText');
+
+function getActiveCatalog() {
+  return state.species === 'dog' ? DOG_SOUND_CATALOG : SOUND_CATALOG;
+}
+
+function getActivePresets() {
+  return state.species === 'dog' ? DOG_SCENARIO_PRESETS : SCENARIO_PRESETS;
+}
+
+function getDefaultSpots() {
+  return state.species === 'dog' ? DOG_DEFAULT_HIDING_SPOTS : DEFAULT_HIDING_SPOTS;
+}
+
+function getSpotsStorageKey() {
+  return state.species === 'dog' ? 'whererukitty_spots_dog' : 'whererukitty_spots';
+}
+
+function getWorkedStorageKey() {
+  return state.species === 'dog' ? 'whererukitty_worked_dog' : 'whererukitty_worked';
+}
 
 /**
  * Helper: Lookup sound metadata by ID
  */
 function getSoundMeta(soundId) {
+  const isDog = state.species === 'dog';
   if (soundId === 'custom-voice') {
     return {
       id: 'custom-voice',
       category: 'sonic',
       categoryLabel: 'เสียงเจ้าของ',
-      title: 'เสียงคุณเรียกชื่อแมว',
+      title: isDog ? 'เสียงคุณเรียกชื่อสุนัข' : 'เสียงคุณเรียกชื่อแมว',
       subtitle: 'Custom Owner Call',
       freqBand: '300 – 3,400 Hz',
       durationSec: 2.8,
-      purpose: 'เสียงคุณเรียกชื่อแมวหรือเขย่าขนมที่อัดไว้เอง'
+      purpose: isDog
+        ? 'เสียงคุณเรียกชื่อสุนัขหรือชวนไปเดินเล่นที่อัดไว้เอง'
+        : 'เสียงคุณเรียกชื่อแมวหรือเขย่าขนมที่อัดไว้เอง'
     };
   }
-  return SOUND_CATALOG.find((s) => s.id === soundId) || SOUND_CATALOG[0];
+  const catalog = getActiveCatalog();
+  return catalog.find((s) => s.id === soundId) || SOUND_CATALOG.find((s) => s.id === soundId) || catalog[0];
 }
 
 /**
@@ -190,6 +271,15 @@ function initTorchDialog() {
   openTorchBtn.addEventListener('click', openModal);
   mobileTorchBtn.addEventListener('click', openModal);
   closeTorchBtn.addEventListener('click', () => torchDialog.close());
+  torchDialog.addEventListener('close', async () => {
+    if (state.hardwareTorchSession) {
+      await releaseHardwareTorch(state.hardwareTorchSession);
+      state.hardwareTorchSession = null;
+      hardwareFlashBtn.setAttribute('aria-pressed', 'false');
+      hardwareFlashText.textContent = 'เปิดไฟแฟลชกล้องหลัง (ถ้าอุปกรณ์รองรับ)';
+      setTorchStatusHint('');
+    }
+  });
 
   // Fallback for browsers without closedby support
   if (!('closedBy' in HTMLDialogElement.prototype)) {
@@ -221,46 +311,109 @@ function initTorchDialog() {
   });
 
   torchCallBtn.addEventListener('click', () => {
-    triggerSingleSound('mother-trill');
+    triggerSingleSound(state.species === 'dog' ? 'dog-squeaky-toy' : 'mother-trill');
   });
 
-  hardwareFlashBtn.addEventListener('click', toggleHardwareFlash);
+  hardwareFlashBtn.addEventListener('click', () => {
+    toggleHardwareFlash();
+  });
+
+  if (torchLensSelect) {
+    torchLensSelect.addEventListener('change', async () => {
+      const chosenId = torchLensSelect.value || null;
+      state.preferredTorchDeviceId = chosenId;
+      if (chosenId) {
+        localStorage.setItem('whererukitty_torch_device', chosenId);
+      } else {
+        localStorage.removeItem('whererukitty_torch_device');
+      }
+      // Re-acquire hardware torch on the newly selected lens immediately
+      if (state.hardwareTorchSession) {
+        await releaseHardwareTorch(state.hardwareTorchSession);
+        state.hardwareTorchSession = null;
+      }
+      await toggleHardwareFlash(chosenId);
+    });
+  }
 }
 
-async function toggleHardwareFlash() {
-  if (state.hardwareTorchTrack) {
-    try {
-      await state.hardwareTorchTrack.applyConstraints({ advanced: [{ torch: false }] });
-      state.hardwareTorchTrack.stop();
-    } catch (_) {}
-    state.hardwareTorchTrack = null;
+function renderTorchLensSelector(rearCameras = [], activeDeviceId = null) {
+  if (!torchLensRow || !torchLensSelect) return;
+  state.rearCameraList = rearCameras;
+
+  if (!Array.isArray(rearCameras) || rearCameras.length <= 1) {
+    torchLensRow.hidden = true;
+    return;
+  }
+
+  torchLensSelect.innerHTML = '';
+  rearCameras.forEach((cam, idx) => {
+    const opt = document.createElement('option');
+    opt.value = cam.deviceId;
+    const rawLabel = (cam.label || '').trim();
+    opt.textContent = rawLabel ? `${idx + 1}. ${rawLabel}` : `เลนส์กล้องหลัง #${idx + 1}`;
+    if (activeDeviceId && cam.deviceId === activeDeviceId) {
+      opt.selected = true;
+    }
+    torchLensSelect.appendChild(opt);
+  });
+  torchLensRow.hidden = false;
+}
+
+function setTorchStatusHint(text) {
+  if (!torchStatusHint) return;
+  if (!text) {
+    torchStatusHint.hidden = true;
+    torchStatusHint.textContent = '';
+  } else {
+    torchStatusHint.textContent = text;
+    torchStatusHint.hidden = false;
+  }
+}
+
+async function toggleHardwareFlash(explicitDeviceId = undefined) {
+  if (state.hardwareTorchSession && explicitDeviceId === undefined) {
+    await releaseHardwareTorch(state.hardwareTorchSession);
+    state.hardwareTorchSession = null;
     hardwareFlashBtn.setAttribute('aria-pressed', 'false');
     hardwareFlashText.textContent = 'เปิดไฟแฟลชกล้องหลัง (ถ้าอุปกรณ์รองรับ)';
+    setTorchStatusHint('');
     return;
   }
 
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    hardwareFlashText.textContent = 'อุปกรณ์นี้ใช้แสงสว่างจากหน้าจอแทนไฟแฟลช';
-    return;
+  hardwareFlashBtn.disabled = true;
+  hardwareFlashText.textContent = 'กำลังค้นหาเลนส์กล้องที่มีไฟแฟลช...';
+  setTorchStatusHint('กำลังตรวจสอบเลนส์กล้องหลังหลักและเปิดวงจรไฟฉาย LED...');
+
+  const preferredDeviceId =
+    explicitDeviceId !== undefined ? explicitDeviceId : state.preferredTorchDeviceId;
+
+  const res = await acquireHardwareTorch({ preferredDeviceId });
+  hardwareFlashBtn.disabled = false;
+
+  if (Array.isArray(res.rearCameras) && res.rearCameras.length > 0) {
+    renderTorchLensSelector(res.rearCameras, res.deviceId || preferredDeviceId);
   }
 
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment' }
-    });
-    const track = stream.getVideoTracks()[0];
-    const capabilities = track.getCapabilities ? track.getCapabilities() : {};
-    if (!capabilities.torch) {
-      track.stop();
-      hardwareFlashText.textContent = 'ใช้โหมดแสงหน้าจอ (อุปกรณ์ไม่มีแฟลชหลัง)';
-      return;
+  if (res.ok) {
+    state.hardwareTorchSession = res;
+    if (res.deviceId) {
+      state.preferredTorchDeviceId = res.deviceId;
+      localStorage.setItem('whererukitty_torch_device', res.deviceId);
     }
-    await track.applyConstraints({ advanced: [{ torch: true }] });
-    state.hardwareTorchTrack = track;
     hardwareFlashBtn.setAttribute('aria-pressed', 'true');
+    const lensSuffix = res.label ? ` (${res.label})` : '';
     hardwareFlashText.textContent = 'ปิดไฟแฟลชกล้องหลัง';
-  } catch (_) {
-    hardwareFlashText.textContent = 'ใช้แสงสว่างหน้าจอแทน (ไม่ได้เปิดสิทธิ์กล้อง)';
+    setTorchStatusHint(
+      res.rearCameras && res.rearCameras.length > 1
+        ? `เปิดไฟแฟลชสำเร็จ${lensSuffix} · หากไฟยังไม่ติดสามารถสลับเลนส์กล้องด้านบนได้`
+        : `เปิดไฟแฟลชกล้องหลังสำเร็จ${lensSuffix}`
+    );
+  } else {
+    state.hardwareTorchSession = null;
+    hardwareFlashBtn.setAttribute('aria-pressed', 'false');
+    hardwareFlashText.textContent = 'ลองเปิดไฟแฟลชกล้องหลังอีกครั้ง';
+    setTorchStatusHint(res.message || 'ใช้โหมดแสงหน้าจอแทน (อุปกรณ์หรือเบราว์เซอร์ไม่เปิดสิทธิ์แฟลชหลัง)');
   }
 }
 
@@ -281,11 +434,133 @@ themeToggleBtn.addEventListener('click', () => {
 });
 
 /**
+ * Species Mode Toggle (Cat Mode ↔ Dog Mode)
+ */
+function applySpeciesMode(species, shouldSelectDefaultPreset = true) {
+  if (state.cycleRunning) {
+    stopCallListenCycle();
+  }
+  state.species = species === 'dog' ? 'dog' : 'cat';
+  const isDog = state.species === 'dog';
+  docHtml.setAttribute('data-species', state.species);
+  localStorage.setItem('whererukitty_species', state.species);
+
+  speciesCatBtn.setAttribute('aria-pressed', String(!isDog));
+  speciesDogBtn.setAttribute('aria-pressed', String(isDog));
+  brandIconCat.hidden = isDog;
+  brandIconDog.hidden = !isDog;
+
+  // Update Header & Brand Copy
+  appTitleText.textContent = isDog ? 'ตูบอยู่ไหน' : 'เหมียวอยู่ไหน';
+  appTitleEn.textContent = isDog ? 'WhereRUDoggy' : 'WhereRUKitty';
+  appSubtitleText.textContent = isDog
+    ? 'เครื่องส่งเสียงเรียกสุนัข นกหวีดความถี่สูง และเรดาร์ฟังเสียงเห่า/ขานรับ'
+    : 'เครื่องส่งเสียงเรียกแมวและเรดาร์ฟังเสียงขานรับสำหรับมือถือ/แท็บเล็ต';
+  document.title = isDog
+    ? 'WhereRUDoggy — ตูบอยู่ไหน เรียกสุนัขออกจากที่ซ่อน'
+    : 'WhereRUKitty — เหมียวอยู่ไหน เรียกแมวออกจากที่ซ่อน';
+  openTorchBtnLabel.textContent = isDog ? 'ไฟฉายส่องหาใต้โต๊ะ' : 'ไฟฉายส่องใต้เตียง';
+
+  // Update Transport & Spectrum Copy
+  listenPhaseText.textContent = isDog ? '2. เงียบฟังเสียงเห่า/ขานรับ' : '2. เงียบฟังเสียงเหมียวตอบ';
+  spectrumRangeLabel.textContent = isDog
+    ? 'ย่านความถี่หูสุนัข & นกหวีด 180 Hz – 14.0 kHz'
+    : 'ย่านความถี่หูแมว 400 Hz – 6.0 kHz';
+
+  // Update Section Headings & Tabs
+  presetHeading.textContent = isDog
+    ? 'เลือกโหมดตามนิสัยและอาการของสุนัข'
+    : 'เลือกโหมดตามนิสัยและอาการของแมว';
+  soundDeckHeading.textContent = isDog
+    ? 'คลังเสียงเรียกสุนัข นกหวีด และเสียงล่อ 12 ความถี่'
+    : 'คลังเสียงเรียกแมวชีวภาพและเสียงล่อ 12 ความถี่';
+  soundDeckDesc.innerHTML = isDog
+    ? 'แตะที่แถวเพื่อเล่นเสียงทันที · กดปุ่ม <strong>+ คิว</strong> เพื่อใส่ในรอบวนเรียก · กด <strong>หมาหัน</strong> เพื่อจำเสียงที่ได้ผล'
+    : 'แตะที่แถวเพื่อเล่นเสียงทันที · กดปุ่ม <strong>+ คิว</strong> เพื่อใส่ในรอบวนเรียก · กด <strong>แมวหัน</strong> เพื่อจำเสียงที่ได้ผล';
+  tabVocalBtn.textContent = isDog ? 'เรียกให้เห่าตอบ (4)' : 'เรียกให้ร้องตอบ (4)';
+  tabPreyBtn.textContent = isDog ? 'ของเล่น & กริ่งบ้าน (2)' : 'กระตุ้นนักล่า (2)';
+
+  // Update Switches, Radar, Voice Recorder, Checklist & Torch Copy
+  gentleModeTitle.textContent = isDog
+    ? 'โหมดสุนัขกลัวฟ้าร้อง/ประทัด (Gentle Soft-Filter)'
+    : 'โหมดแมวขี้กลัว (Gentle Soft-Filter)';
+  gentleModeDesc.textContent = isDog
+    ? 'กรองความถี่แหลมออกและลดความตกใจ เหมาะกับสุนัขที่กำลังตื่นกลัวเสียงดังหรือหลบใต้โต๊ะ'
+    : 'กรองความถี่แหลมเกิน 3.8 kHz ออกและลดความตกใจ เหมาะกับแมวตื่นกลัวหรือเพิ่งย้ายบ้าน';
+  autoMicDesc.textContent = isDog
+    ? 'วิเคราะห์เสียงเห่า เสียงครางหงิงๆ หรือเสียงขยับตัวเฉพาะตอนที่แอปหยุดส่งเสียง'
+    : 'วิเคราะห์เสียงเหมียวหรือเสียงกุกกักเฉพาะตอนที่แอปหยุดส่งเสียง เพื่อไม่ให้เสียงลำโพงกวนกัน';
+  radarHeading.textContent = isDog
+    ? 'เรดาร์จับเสียงสุนัขเห่า/ขานรับช่วงเงียบ'
+    : 'เรดาร์จับเสียงแมวขานรับช่วงเงียบ';
+  radarDesc.textContent = isDog
+    ? 'เมื่ออยู่ในช่วงเงียบฟังเสียง หากมีเสียงเห่า เสียงคราง หรือเสียงขยับตัว ระบบจะบันทึกเวลาและจุดที่ค้นหาทันที'
+    : 'เมื่ออยู่ในช่วงเงียบฟังเสียง หากมีเสียงร้องเหมียวหรือเสียงขยับตัว ระบบจะบันทึกเวลาและห้องไว้ให้ทันที';
+  simulateReplyBtnText.textContent = isDog ? 'จำลองเสียงสุนัขเห่าตอบ' : 'จำลองเสียงแมวขานรับ';
+  voiceRecorderHeading.textContent = isDog
+    ? 'เสียงคุณเรียกชื่อสุนัขตัวเอง'
+    : 'เสียงคุณเรียกชื่อแมวตัวเอง';
+  voiceRecorderDesc.textContent = isDog
+    ? 'สุนัขจำเสียงเจ้าของเรียกชื่อหรือคำว่า "กินหนม / ไปเที่ยว" ได้แม่นยำที่สุด อัดไว้เปิดวนในคิวได้ทันที'
+    : 'แมวมักจำเสียงเจ้าของเรียกชื่อหรือเสียงเคาะกระปุกขนมประจำบ้านได้ดีที่สุด อัดไว้เปิดวนในคิวได้ทันที';
+  if (!state.isRecordingVoice) {
+    recordVoiceBtnText.textContent = isDog ? 'อัดเสียงเรียกชื่อสุนัข (3 วิ)' : 'อัดเสียงเรียกชื่อแมว (3 วิ)';
+  }
+  foundPetBtnText.textContent = isDog
+    ? 'เจอตัวเจ้าตูบแล้ว! (หยุดเสียงและบันทึกจุดที่เจอ)'
+    : 'เจอตัวเจ้าเหมียวแล้ว! (หยุดเสียงและบันทึกจุดที่เจอ)';
+  mobilePrimaryCallBtnText.textContent = isDog ? 'ตุ๊กตาบีบ' : 'เสียงแม่แมว';
+  mobileSecondaryCallBtnText.textContent = isDog ? 'เขย่าขนม' : 'เปิดกระป๋อง';
+  torchDialogTitle.textContent = isDog
+    ? 'ไฟฉายส่องหาสุนัขใต้โต๊ะและมุมมืด'
+    : 'ไฟฉายส่องหาแมวใต้เตียงและในตู้มืด';
+  torchInstructionsText.innerHTML = isDog
+    ? 'ดันความสว่างหน้าจอขึ้นแล้วส่องเข้าไปใต้โต๊ะหรือมุมอับ สังเกต <strong>ประกายสะท้อนจากดวงตาสุนัข (Tapetum Lucidum)</strong> พร้อมกดปุ่มบีบตุ๊กตายางด้านล่างเพื่อเรียกให้หันมอง'
+    : 'ดันความสว่างหน้าจอขึ้นแล้วส่องเข้าไปใต้เตียงหรือซอกตู้ สังเกต <strong>ประกายสะท้อนจากดวงตาแมว (Tapetum Lucidum)</strong> พร้อมกดปุ่มส่งเสียงเรียกด้านล่างเพื่อดูว่าแมวหันมามองหรือไม่';
+  torchCallBtnText.textContent = isDog
+    ? 'บีบตุ๊กตายางเรียกขณะส่องไฟ'
+    : 'ส่งเสียงเรียกแม่แมวขณะส่องไฟ';
+
+  // Load species-specific worked sounds & hiding spots
+  const defaultWorked = isDog ? '["dog-squeaky-toy", "treat-shake"]' : '["mother-trill", "wet-can"]';
+  state.workedSounds = JSON.parse(localStorage.getItem(getWorkedStorageKey()) || defaultWorked);
+  state.hidingSpots = JSON.parse(
+    localStorage.getItem(getSpotsStorageKey()) || JSON.stringify(getDefaultSpots())
+  );
+
+  if (shouldSelectDefaultPreset) {
+    const presets = getActivePresets();
+    selectPreset(presets[0]);
+  } else {
+    renderPresets();
+    renderQueueStrip();
+    renderSoundPads();
+    updateTransportHeader();
+  }
+  updateCycleButtons();
+  updateRadarControls();
+  renderDetectionLog();
+  renderHidingSpots();
+}
+
+speciesCatBtn.addEventListener('click', () => {
+  if (state.species !== 'cat') {
+    applySpeciesMode('cat', true);
+  }
+});
+
+speciesDogBtn.addEventListener('click', () => {
+  if (state.species !== 'dog') {
+    applySpeciesMode('dog', true);
+  }
+});
+
+/**
  * Render Scenario Quick Presets
  */
 function renderPresets() {
   presetList.innerHTML = '';
-  SCENARIO_PRESETS.forEach((preset) => {
+  getActivePresets().forEach((preset) => {
     const isSelected = state.activePresetId === preset.id;
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -374,10 +649,13 @@ function renderQueueStrip() {
  * Render 12 Sound Trigger Pads
  */
 function renderSoundPads() {
+  const isDog = state.species === 'dog';
+  const workedLabel = isDog ? 'หมาหัน' : 'แมวหัน';
+  const workedDoneLabel = isDog ? 'หมาหันแล้ว' : 'แมวหันแล้ว';
   workedTabCount.textContent = String(state.workedSounds.length);
   soundPadGrid.innerHTML = '';
 
-  const filtered = SOUND_CATALOG.filter((item) => {
+  const filtered = getActiveCatalog().filter((item) => {
     if (state.activeCategory === 'all') return true;
     if (state.activeCategory === 'worked') return state.workedSounds.includes(item.id);
     return item.category === state.activeCategory;
@@ -386,7 +664,7 @@ function renderSoundPads() {
   if (filtered.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'detection-log-empty';
-    empty.textContent = 'ยังไม่มีเสียงที่ทำเครื่องหมายว่า "แมวหัน" ลองกดปุ่ม "แมวหัน" บนเสียงที่เจ้าเหมียวตอบสนอง';
+    empty.textContent = `ยังไม่มีเสียงที่ทำเครื่องหมายว่า "${workedLabel}" ลองกดปุ่ม "${workedLabel}" บนเสียงที่ได้ผล`;
     soundPadGrid.appendChild(empty);
     return;
   }
@@ -449,7 +727,7 @@ function renderSoundPads() {
     workedBtn.type = 'button';
     workedBtn.className = 'mini-action-btn worked-btn';
     workedBtn.setAttribute('aria-pressed', String(isWorked));
-    workedBtn.textContent = isWorked ? 'แมวหันแล้ว' : 'แมวหัน';
+    workedBtn.textContent = isWorked ? workedDoneLabel : workedLabel;
     workedBtn.addEventListener('click', () => toggleWorkedSound(sound.id));
 
     actions.appendChild(queueBtn);
@@ -489,7 +767,7 @@ function toggleWorkedSound(soundId) {
   } else {
     state.workedSounds.push(soundId);
   }
-  localStorage.setItem('whererukitty_worked', JSON.stringify(state.workedSounds));
+  localStorage.setItem(getWorkedStorageKey(), JSON.stringify(state.workedSounds));
   renderSoundPads();
 }
 
@@ -597,15 +875,25 @@ function enterListeningPhase() {
 
 function updateCycleButtons() {
   const running = state.cycleRunning;
+  const isDog = state.species === 'dog';
   cycleToggleBtn.dataset.running = String(running);
   mobileCycleBtn.dataset.running = String(running);
   cyclePlayIcon.hidden = running;
   cycleStopIcon.hidden = !running;
-  cycleBtnLabel.textContent = running ? 'หยุดวนเรียกแมว' : 'เริ่มวนเรียก + เงียบฟัง';
-  mobileCycleBtnText.textContent = running ? 'หยุดวนเรียก' : 'เริ่มวนเรียกแมว';
+  cycleBtnLabel.textContent = running
+    ? isDog
+      ? 'หยุดวนเรียกสุนัข'
+      : 'หยุดวนเรียกแมว'
+    : 'เริ่มวนเรียก + เงียบฟัง';
+  mobileCycleBtnText.textContent = running
+    ? 'หยุดวนเรียก'
+    : isDog
+    ? 'เริ่มวนเรียกหมา'
+    : 'เริ่มวนเรียกแมว';
 }
 
 function updateTransportHeader() {
+  const isDog = state.species === 'dog';
   const meta = getSoundMeta(state.selectedSoundId);
   activeSoundTitle.textContent = `${meta.title} (${meta.subtitle})`;
   callSecDisplay.textContent = String(state.callSeconds);
@@ -619,7 +907,7 @@ function updateTransportHeader() {
     phaseBadge.textContent = 'ช่วงเงียบฟังเสียงขานรับ';
   } else {
     phaseBadge.dataset.phase = 'idle';
-    phaseBadge.textContent = 'พร้อมเรียกแมว';
+    phaseBadge.textContent = isDog ? 'พร้อมเรียกสุนัข' : 'พร้อมเรียกแมว';
     phaseTimerText.textContent = `รอบอัตโนมัติ: ส่งเสียง ${state.callSeconds} วิ · เงียบฟัง ${state.listenSeconds} วิ`;
   }
 }
@@ -645,11 +933,11 @@ singlePulseBtn.addEventListener('click', () => {
 });
 
 mobileMotherCallBtn.addEventListener('click', () => {
-  triggerSingleSound('mother-trill');
+  triggerSingleSound(state.species === 'dog' ? 'dog-squeaky-toy' : 'mother-trill');
 });
 
 mobileWetCanBtn.addEventListener('click', () => {
-  triggerSingleSound('wet-can');
+  triggerSingleSound(state.species === 'dog' ? 'treat-shake' : 'wet-can');
 });
 
 /**
@@ -749,8 +1037,12 @@ enableMicBtn.addEventListener('click', async () => {
 });
 
 simulateReplyBtn.addEventListener('click', () => {
-  audioEngine.triggerSimulatedCatReply();
-  recordSoundDetection('ตรวจพบเสียงเหมียวตอบรับ (จำลองทดสอบ)', 76);
+  const isDog = state.species === 'dog';
+  audioEngine.triggerSimulatedCatReply(state.species);
+  recordSoundDetection(
+    isDog ? 'ตรวจพบเสียงสุนัขเห่าตอบรับ (จำลองทดสอบ)' : 'ตรวจพบเสียงเหมียวตอบรับ (จำลองทดสอบ)',
+    76
+  );
 });
 
 function recordSoundDetection(label, levelDb) {
@@ -930,7 +1222,7 @@ function renderHidingSpots() {
         state.activeRoom = spot.room;
         activeRoomSelect.value = spot.room;
       }
-      localStorage.setItem('whererukitty_spots', JSON.stringify(state.hidingSpots));
+      localStorage.setItem(getSpotsStorageKey(), JSON.stringify(state.hidingSpots));
       renderHidingSpots();
     });
 
@@ -961,23 +1253,24 @@ addSpotForm.addEventListener('submit', (e) => {
     checked: false
   });
   newSpotInput.value = '';
-  localStorage.setItem('whererukitty_spots', JSON.stringify(state.hidingSpots));
+  localStorage.setItem(getSpotsStorageKey(), JSON.stringify(state.hidingSpots));
   renderHidingSpots();
 });
 
 foundCatBtn.addEventListener('click', () => {
   stopCallListenCycle();
-  recordSoundDetection(`เจอตัวแมวที่ "${state.activeRoom}" แล้ว!`, 82);
+  const petName = state.species === 'dog' ? 'สุนัข' : 'แมว';
+  recordSoundDetection(`เจอตัว${petName}ที่ "${state.activeRoom}" แล้ว!`, 82);
   if (!state.workedSounds.includes(state.selectedSoundId) && state.selectedSoundId !== 'custom-voice') {
     state.workedSounds.push(state.selectedSoundId);
-    localStorage.setItem('whererukitty_worked', JSON.stringify(state.workedSounds));
+    localStorage.setItem(getWorkedStorageKey(), JSON.stringify(state.workedSounds));
     renderSoundPads();
   }
 });
 
 resetChecklistBtn.addEventListener('click', () => {
-  state.hidingSpots = DEFAULT_HIDING_SPOTS.map((s) => ({ ...s, checked: false }));
-  localStorage.setItem('whererukitty_spots', JSON.stringify(state.hidingSpots));
+  state.hidingSpots = getDefaultSpots().map((s) => ({ ...s, checked: false }));
+  localStorage.setItem(getSpotsStorageKey(), JSON.stringify(state.hidingSpots));
   renderHidingSpots();
 });
 
@@ -1085,14 +1378,9 @@ function init() {
   initAllSliders();
   initSwitches();
   initTorchDialog();
+  applySpeciesMode(state.species, true);
   updateTuningLabels();
   updateCustomVoiceUI();
-  renderPresets();
-  renderQueueStrip();
-  renderSoundPads();
-  renderDetectionLog();
-  renderHidingSpots();
-  updateTransportHeader();
   requestAnimationFrame(renderLoopFrame);
 }
 

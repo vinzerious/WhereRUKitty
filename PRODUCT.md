@@ -14,8 +14,8 @@ delegated: Vanilla HTML5, Modern CSS (Container Queries, Dynamic Viewport Units 
 
 ## Users
 
-- **Primary User:** Cat owners (ทาสแมว) using a **smartphone or tablet** in hand while walking through rooms, peeking under beds/sofas, or checking closets to find a hiding cat.
-- **Situation & Job:** The cat is hiding in the house/condo and won't come out. The owner needs a single-handed mobile/tablet acoustic tool that either (1) lures the cat out of hiding (food/prey/curiosity triggers) or (2) coaxes the cat into meowing back to reveal its location (mother cat trill, kitten distress call, greeting chirp, custom owner voice), while leaving quiet listening windows so the owner can actually hear the cat's faint response.
+- **Primary User:** Cat and dog owners (ทาสแมวและคนรักสุนัข) using a **smartphone or tablet** in hand while walking through rooms, peeking under beds/sofas/tables, or checking closets/yards to find a hiding cat or dog.
+- **Situation & Job:** The pet is hiding in the house/condo/yard and won't come out. The owner needs a single-handed mobile/tablet acoustic tool with a one-tap **Species Mode Toggle (`โหมดแมว` ↔ `โหมดสุนัข`)** that either (1) lures the pet out of hiding (food/prey/squeaky-toy/doorbell triggers) or (2) coaxes the pet into meowing, barking, or whining back to reveal its location (mother cat trill, kitten call, puppy whine, pack howl, dog whistle, custom owner voice), while leaving quiet listening windows so the owner can hear the faint response.
 
 ## Product Purpose
 
@@ -33,11 +33,19 @@ Unlike generic novelty soundboards that play a flat 1-second clip and force cons
 
 ## Capabilities and Constraints
 
-- **12 Formant & Physical-Modeling Sound Generators across 4 Tactical Categories:**
-  1. **โหมดเรียกให้ร้องตอบ (Vocal Reply Triggers):** แม่แมวเรียกหาลูก (Mother Trill `Prrt-ek`), ลูกแมวร้องหาแม่ (Lost Kitten Mew), เหมียวทักทายอ้อนๆ (Friendly Greeting Meow), กรนครืดๆ + เรียกสั้นๆ (Comfort Purr & Chirp).
-  2. **โหมดล่อด้วยของกิน (Food & Treat Lures):** เปิดกระป๋องอาหารเปียก (Wet Can Pull-Tab & Pop), เขย่าถุงขนมแมวเลีย/อาหารเม็ด (Treat Bag Shake), เคาะชามเซรามิก (Ceramic Bowl Clink), ขยำซองขนมฟอยล์ (Crinkle Wrapper).
-  3. **โหมดกระตุ้นสัญชาตญาณนักล่า (Prey & Curiosity):** นกกระจอกร้องจิ๊บๆ (Sparrow Chirp), หนูจี๊ดๆ ซ่อนตัว (Mouse Squeak), แมลงบินวน (Fluttering Bug).
-  4. **โหมดความถี่พิเศษเรียกความสนใจ (Sonic Attention & Custom):** เสียงจุ๊ปาก/ชู่วๆ (Pss-Pss & Tongue Clicks), คลื่นความถี่กระตุ้นหูแมว 3–6 kHz (Feline Ear-Perk Harmonic Sweep), และ **อัดเสียงตัวเองเรียกชื่อแมว (Custom Owner Voice Recorder)**.
+- **Instant Species Mode Toggle (`โหมดแมว` ↔ `โหมดสุนัข`):** Segmented toggle button in the top header shell (`#speciesCatBtn` / `#speciesDogBtn`) that switches the entire app between **Cat Mode (`เหมียวอยู่ไหน WhereRUKitty`)** and **Dog Mode (`ตูบอยู่ไหน WhereRUDoggy`)**, swapping the brand emblem, 12 acoustic synthesizers, 4 scenario presets, radar simulation, and 8 default hiding spots.
+- **12 Formant & Physical-Modeling Sound Generators per Species Mode across 4 Tactical Categories:**
+  1. **โหมดเรียกให้ร้อง/เห่าตอบ (Vocal Reply Triggers):**
+     - *Cat Mode:* แม่แมวเรียกหาลูก (Mother Trill `Prrt-ek`), ลูกแมวร้องหาแม่ (Lost Kitten Mew), เหมียวทักทายอ้อนๆ (Friendly Greeting Meow), กรนครืดๆ + เรียกสั้นๆ (Comfort Purr & Chirp).
+     - *Dog Mode:* ลูกหมาอ้อนเรียกหา (Playful Puppy Whine & Yip), โฮ่งทักทายชวนเล่น (Friendly Play-Bow Double Bark), หอนเรียกฝูงสั้นๆ (Pack Harmonic Howl Call), หัวใจเต้น & ลมหายใจปลอบใจ (Calming Heartbeat & Soft Pant).
+  2. **โหมดล่อด้วยของกิน (Food & Treat Lures):** เปิดกระป๋องอาหารเปียก (Wet Can Pull-Tab & Pop), เขย่าถุงขนม/อาหารเม็ด (Treat Bag Shake), เคาะชามข้าว (Bowl Clink), ขยำซองขนม/สแน็คขัดฟัน (Crinkle Wrapper).
+  3. **โหมดกระตุ้นสัญชาตญาณนักล่า / ของเล่น & กริ่งบ้าน (Prey, Toys & Door Triggers):**
+     - *Cat Mode:* นกกระจอกร้องริมหน้าต่าง (Sparrow Chirp), หนูจี๊ดๆ วิ่งตามซอก (Mouse Squeak).
+     - *Dog Mode:* ตุ๊กตายางบีบปิ๊บๆ (High-Pitch Squeaky Toy), กริ่งหน้าบ้าน & เคาะประตู (Front Doorbell Ding-Dong & Knock).
+  4. **โหมดความถี่พิเศษเรียกความสนใจ (Sonic Attention & Custom):**
+     - *Cat Mode:* เสียงจุ๊ปาก/ชู่วๆ (Pss-Pss & Tongue Clicks), คลื่นความถี่กระตุ้นหูแมว 3–6 kHz (Feline Ear-Perk Chime).
+     - *Dog Mode:* นกหวีดความถี่สูงเรียกสุนัข 9–14 kHz (High-Freq Dog Whistle), ผิวปากเรียก & จุ๊ปากชวนเดินเล่น (Owner Lip-Whistle & Kiss Clicks).
+     - *Shared:* **อัดเสียงตัวเองเรียกชื่อสัตว์เลี้ยง (Custom Owner Voice Recorder)**.
 - **Call & Listen Auto-Loop (โหมดเรียกสลับเงียบฟังเสียง):** Configurable Call Duration (e.g., 3s) + Quiet Listen Duration (e.g., 4s) + Sequence Queue (combo of up to 3 sounds).
 - **Live Acoustic Ear Radar (เรดาร์ช่วยฟังเสียงขานรับ):** Optional microphone input using Web Audio `AnalyserNode` tuned to feline vocal frequencies (400 Hz – 4500 Hz) that listens specifically during the Quiet Window (or on demand) so speaker output never false-triggers it, logging timestamps when a sound spike occurs.
 - **Scenario / Cat Mood Quick Presets (โหมดตามนิสัยแมว):**
