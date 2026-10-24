@@ -1,6 +1,6 @@
 {
-  "name": "WhereRUKitty & WhereRUDoggy — เรียกแมวและสุนัขออกจากที่ซ่อน",
-  "short_name": "WhereRUKitty",
+  "name": "MeowMeow-BokBok — เหมียวเหมียว-บ็อกบ็อก เรียกสัตว์เลี้ยงออกจากที่ซ่อน",
+  "short_name": "MeowMeow-BokBok",
   "description": "เว็บแอปส่งเสียงเรียกแมวและสุนัขออกจากที่ซ่อนและเรดาร์ฟังเสียงขานรับ สำหรับมือถือและแท็บเล็ต",
   "start_url": "./index.html",
   "display": "standalone",
