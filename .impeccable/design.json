@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-24T16:26:00+07:00",
+  "title": "Design System: WhereRUKitty",
+  "extensions": {
+    "colorMeta": {
+      "salmon-coral": {
+        "role": "primary",
+        "displayName": "Rich Salmon-Coral",
+        "canonical": "#B83227",
+        "tonalRamp": ["#3B0D09", "#5C1610", "#7D1E17", "#99261C", "#B83227", "#D95348", "#EDAFA9", "#FCEAE8"]
+      },
+      "marigold-amber": {
+        "role": "secondary",
+        "displayName": "Marigold Amber",
+        "canonical": "#8F5105",
+        "tonalRamp": ["#331C02", "#522D03", "#703F04", "#8F5105", "#B86B0E", "#E59838", "#E8C389", "#FDF2E1"]
+      },
+      "cat-eye-emerald": {
+        "role": "tertiary",
+        "displayName": "Cat-Eye Emerald",
+        "canonical": "#116647",
+        "tonalRamp": ["#072B1E", "#0B422E", "#116647", "#198760", "#22A879", "#2CC990", "#98D6BE", "#E4F5EE"]
+      },
+      "sardine-navy": {
+        "role": "neutral",
+        "displayName": "Deep Sardine Navy",
+        "canonical": "#122038",
+        "tonalRamp": ["#080F1A", "#122038", "#1B2E4F", "#263E68", "#334766", "#4A6082", "#94A3B8", "#EEF2F7"]
+      },
+      "harbor-pewter": {
+        "role": "neutral",
+        "displayName": "Cool Harbor Pewter",
+        "canonical": "#EEF2F7",
+        "tonalRamp": ["#1E293B", "#334155", "#475569", "#64748B", "#94A3B8", "#CBD5E1", "#E2E8F0", "#EEF2F7"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Top shell application title."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Primary workspace section headings (1.25x step above body)."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sound trigger pad titles, preset titles, and active sound readout."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Section descriptions and inspection torch instructions."
+      },
+      "label": {
+        "displayName": "Label (Tabular)",
+        "purpose": "Frequency bands, countdown timers, dB meters, and action pills."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-elevated",
+        "value": "0 4px 14px rgba(18, 32, 56, 0.07)",
+        "purpose": "Lifts top-level Porcelain panel sections off the Harbor Pewter ground."
+      },
+      {
+        "name": "shadow-shell",
+        "value": "0 6px 20px rgba(10, 18, 34, 0.18)",
+        "purpose": "Grounds the Deep Sardine Navy header and transport deck."
+      },
+      {
+        "name": "shadow-cta",
+        "value": "0 3px 10px rgba(8, 15, 26, 0.28)",
+        "purpose": "Neutral elevation under primary transport CTA buttons."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out-quick",
+        "value": "160ms ease-out",
+        "purpose": "Immediate tactile feedback on sound pads, buttons, and preset switches."
+      },
+      {
+        "name": "linear-meter",
+        "value": "120ms linear",
+        "purpose": "Smooth progress fill updates inside the Dual-Phase Call & Listen meter."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "560px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "840px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Call Cycle Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary one-thumb CTA to start or stop the alternating Call & Listen loop.",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><polygon points=\"5 3 19 12 5 21 5 3\" fill=\"currentColor\"/></svg><span>เริ่มวนเรียก + เงียบฟัง</span></button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 18px; border-radius: 10px; border: 1px solid #E86F64; background-color: #B83227; color: #FFFFFF; font-family: 'Noto Sans Thai', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 10px rgba(8, 15, 26, 0.28); transition: background-color 160ms ease-out, transform 160ms ease-out; } .ds-btn-primary:hover { background-color: #99261C; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2.5px solid #B83227; outline-offset: 3px; }"
+    },
+    {
+      "name": "Secondary Utility Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Secondary button for microphone radar activation, voice playback, and spot addition.",
+      "html": "<button class=\"ds-btn-secondary\">เปิดไมค์ช่วยฟังเสียง</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 6px 12px; border-radius: 8px; border: 1px solid #94A3B8; background-color: #E2E8F0; color: #122038; font-family: 'Noto Sans Thai', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color 150ms ease-out; } .ds-btn-secondary:hover { background-color: #D5DFEC; } .ds-btn-secondary:focus-visible { outline: 2.5px solid #B83227; outline-offset: 3px; }"
+    },
+    {
+      "name": "Acoustic Trigger Pad",
+      "kind": "card",
+      "refersTo": "card-panel",
+      "description": "Tactile sound pad displaying Thai title, bioacoustic frequency band, purpose, and queue/worked toggles.",
+      "html": "<div class=\"ds-sound-pad\"><div class=\"ds-pad-main\"><div><div class=\"ds-pad-title\">แม่แมวเรียกหาลูก <span class=\"ds-pad-tag\">เรียกให้แมวร้องตอบ</span></div><div class=\"ds-pad-sub\">Mother Cat Chirrup (Prrt-ek)</div></div><span class=\"ds-play-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><polygon points=\"5 3 19 12 5 21 5 3\" fill=\"currentColor\"/></svg></span></div><div class=\"ds-pad-foot\"><span>ความถี่ 280 – 1,950 Hz</span><button class=\"ds-mini-btn\">+ คิว</button></div></div>",
+      "css": ".ds-sound-pad { border: 1px solid #CBD5E1; border-radius: 10px; background: #EEF2F7; padding: 12px; font-family: 'Noto Sans Thai', sans-serif; color: #122038; } .ds-pad-main { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; } .ds-pad-title { font-size: 15px; font-weight: 700; } .ds-pad-tag { font-size: 11px; font-weight: 600; padding: 1px 6px; border-radius: 4px; background: #E2E8F0; color: #334766; border: 1px solid #CBD5E1; } .ds-pad-sub { font-size: 12px; color: #334766; } .ds-play-icon { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; background: #122038; color: #F4F7FB; } .ds-pad-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #CBD5E1; font-size: 12px; color: #4A6082; font-variant-numeric: tabular-nums; } .ds-mini-btn { padding: 4px 8px; border-radius: 6px; border: 1px solid #CBD5E1; background: #FFFFFF; color: #334766; font-size: 12px; font-weight: 600; cursor: pointer; } .ds-mini-btn:hover { background: #E2E8F0; color: #122038; }"
+    },
+    {
+      "name": "Queue Sequence Chip",
+      "kind": "chip",
+      "description": "Displays an active sound step inside the 3-slot Call-and-Listen rotation.",
+      "html": "<div class=\"ds-queue-chip\"><span>1. แม่แมวเรียกหาลูก</span><button class=\"ds-chip-rm\" aria-label=\"ลบ\">×</button></div>",
+      "css": ".ds-queue-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 6px; background: #1B2E4F; border: 1px solid #263E68; color: #F4F7FB; font-family: 'Noto Sans Thai', sans-serif; font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; } .ds-chip-rm { width: 18px; height: 18px; border: 0; border-radius: 50%; background: rgba(255,255,255,0.14); color: #F4F7FB; cursor: pointer; } .ds-chip-rm:hover { background: rgba(184, 50, 39, 0.85); }"
+    },
+    {
+      "name": "Hiding Spot Input Field",
+      "kind": "input",
+      "description": "Text input for adding custom household cat hiding spots with interaction-aware validation.",
+      "html": "<input class=\"ds-spot-input\" type=\"text\" placeholder=\"เพิ่มจุดซ่อนประจำบ้าน เช่น บนหลังแอร์...\" />",
+      "css": ".ds-spot-input { min-height: 38px; padding: 6px 10px; border-radius: 8px; border: 1px solid #94A3B8; background: #EEF2F7; color: #122038; font-family: 'Noto Sans Thai', sans-serif; font-size: 14px; } .ds-spot-input:focus-visible { outline: 2.5px solid #B83227; outline-offset: 3px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Coastal Apothecary & Gourmet Tin",
+    "overview": "WhereRUKitty is an Operate-mode handheld utility used by cat owners walking through rooms, peeking under beds, and checking closets with a phone or tablet in one hand. Its visual language draws from gourmet wet cat food tin lithography and clean veterinary apothecary labels: a Deep Sardine Navy top shell that anchors the live Call-and-Listen transport deck, paired with Cool Harbor Pewter and Porcelain surfaces that keep the 12 acoustic triggers scannable at a glance.\n\nEvery visual decision serves the core acoustic ritual: calling the cat for a timed window, then falling silent so the owner and the Ear-Perk microphone radar can catch a faint meow reply. Colors encode real acoustic states rather than decoration, and a one-tap Dim-Room mode plus an Under-Sofa Screen Torch adapt the surface for dark corners without blinding the user or startling a timid cat.",
+    "keyCharacteristics": [
+      "Committed Deep Sardine Navy shell contrasting against Cool Harbor Pewter and Porcelain work panels",
+      "Semantic three-state acoustic signaling: Salmon-Coral for active emission, Marigold Amber for the silent listening window, and Cat-Eye Emerald for detected feline replies",
+      "Single-family Thai/Latin workhorse sans-serif with strict tabular numerals on all timers, frequencies, and decibel readouts",
+      "Container-query and breakpoint-driven responsive architecture scaling from a one-thumb phone transceiver to a two-column tablet field console"
+    ],
+    "rules": [
+      {
+        "name": "The Acoustic State Triad Rule",
+        "body": "Salmon-Coral, Marigold Amber, and Cat-Eye Emerald are reserved strictly for the three phases of finding a cat: Calling (emission), Listening (quiet window), and Detected (cat response or confirmed trigger). Never use them as arbitrary decorative splashes.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tinted Secondary Ink Rule",
+        "body": "Secondary text on both Porcelain panels and the Deep Sardine Navy shell is always tinted with navy-slate hue (#334766 on light, #C4D3E8 on dark shell) rather than achromatic gray.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Acoustic Readout Rule",
+        "body": "Every element displaying seconds, hertz, percentages, decibels, or checklist counts must apply font-variant-numeric: tabular-nums so live updates never jitter horizontally.",
+        "section": "typography"
+      },
+      {
+        "name": "The No-Kicker Rule",
+        "body": "Section headings stand directly at the top of their container without eyebrow labels or uppercase kickers above them.",
+        "section": "typography"
+      },
+      {
+        "name": "The No-Nested-CardShadow Rule",
+        "body": "Only top-level .panel-section containers carry var(--shadow-elevated). Inner sound pads, sliders, and checklist rows use flat backgrounds and 1px solid var(--border-subtle) borders without nested shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use authored inline SVGs with consistent 1.75px–2px stroke width and rounded caps/joins for all icons.",
+      "Do preserve the silent Listening Window in every automatic call loop so the owner can hear faint meows from closets or under furniture.",
+      "Do maintain WCAG AA contrast (≥ 4.5:1 for body text, ≥ 3:1 for large text and UI tracks) across both Day ([data-theme=\"day\"]) and Dim-Room ([data-theme=\"dim\"]) themes."
+    ],
+    "donts": [
+      "Don't place kicker or eyebrow labels above headings (<h1>, <h2>, <h3>).",
+      "Don't use Unicode emojis as UI icons or status indicators.",
+      "Don't use colored glow box-shadow halos on dark surfaces or border-left / border-right stripes thicker than 1px."
+    ]
+  }
+}

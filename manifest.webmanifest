@@ -1,0 +1,18 @@
+{
+  "name": "WhereRUKitty — เหมียวอยู่ไหน เรียกแมวออกจากที่ซ่อน",
+  "short_name": "WhereRUKitty",
+  "description": "เว็บแอปส่งเสียงเรียกแมวและเรดาร์ฟังเสียงขานรับ สำหรับมือถือและแท็บเล็ต",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#EEF2F7",
+  "theme_color": "#122038",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

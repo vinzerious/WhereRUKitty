@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="day">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#14233C">
+  <meta name="description" content="WhereRUKitty — เว็บแอปส่งเสียงเรียกแมวออกจากที่ซ่อนและเรดาร์ฟังเสียงแมวขานรับ ออกแบบสำหรับมือถือและแท็บเล็ต">
+  <title>WhereRUKitty — เหมียวอยู่ไหน เรียกแมวออกจากที่ซ่อน</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a href="#main-workspace" class="skip-link">ข้ามไปยังแผงควบคุมหลัก</a>
+
+  <!-- Top Shell Header -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand-lockup">
+        <svg class="brand-mark" width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
+          <rect width="36" height="36" rx="9" fill="#D9483B"/>
+          <path d="M8.5 15L10.5 7L15.5 11.5H20.5L25.5 7L27.5 15C28.4 18.5 27.4 23 24.5 25.8C22.4 27.8 20.3 29 18 29C15.7 29 13.6 27.8 11.5 25.8C8.6 23 7.6 18.5 8.5 15Z" fill="#FBF7F0" stroke="#14233C" stroke-width="1.75" stroke-linejoin="round"/>
+          <circle cx="14.5" cy="18" r="1.6" fill="#14233C"/>
+          <circle cx="21.5" cy="18" r="1.6" fill="#14233C"/>
+          <path d="M16.6 21.2H19.4L18 22.8L16.6 21.2Z" fill="#D9483B"/>
+        </svg>
+        <div class="brand-titles">
+          <h1 class="app-title">เหมียวอยู่ไหน <span class="app-title-en">WhereRUKitty</span></h1>
+          <p class="app-subtitle">เครื่องส่งเสียงเรียกแมวและเรดาร์ฟังเสียงขานรับสำหรับมือถือ/แท็บเล็ต</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" id="themeToggleBtn" class="header-btn" aria-pressed="false" title="สลับโหมดแสงหน้าจอสำหรับส่องในที่มืด">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <span id="themeToggleLabel">โหมดที่มืด</span>
+        </button>
+
+        <button type="button" id="openTorchBtn" class="header-btn header-btn-accent" commandfor="torchDialog" command="show-modal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6c0 2-2 2-2 4v10a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V10c0-2-2-2-2-4V2h12z"/>
+            <line x1="6" y1="6" x2="18" y2="6"/>
+            <line x1="12" y1="12" x2="12" y2="12.01"/>
+          </svg>
+          <span>ไฟฉายส่องใต้เตียง</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Signature Move: Dual-Phase Call & Listen Transport Deck -->
+    <section class="transport-deck" aria-label="แผงควบคุมจังหวะส่งเสียงเรียกและเงียบฟังเสียงขานรับ">
+      <div class="transport-top">
+        <div class="phase-status-group">
+          <span id="phaseBadge" class="phase-badge" data-phase="idle">พร้อมเรียกแมว</span>
+          <div class="phase-readout">
+            <strong id="activeSoundTitle" class="active-sound-name">แม่แมวเรียกหาลูก (Mother Chirrup)</strong>
+            <span id="phaseTimerText" class="phase-timer">รอบอัตโนมัติ: ส่งเสียง 3 วิ · เงียบฟัง 4 วิ</span>
+          </div>
+        </div>
+
+        <div class="transport-primary-controls">
+          <button type="button" id="cycleToggleBtn" class="cycle-cta-btn" data-running="false">
+            <svg id="cyclePlayIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+            </svg>
+            <svg id="cycleStopIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+              <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
+            </svg>
+            <span id="cycleBtnLabel">เริ่มวนเรียก + เงียบฟัง</span>
+          </button>
+
+          <button type="button" id="singlePulseBtn" class="pulse-btn" title="ส่งเสียงที่เลือก 1 ครั้งทันที">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+            </svg>
+            <span>ส่งเสียง 1 ครั้ง</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dual-Phase Timeline & Live Feline Ear-Perk Spectrum Strip -->
+      <div class="timeline-spectrum-strip">
+        <div class="dual-phase-meter" role="progressbar" aria-label="ความคืบหน้ารอบส่งเสียงและฟังเสียงขานรับ" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="cycleProgressBar">
+          <div class="phase-segment phase-segment-call" id="callPhaseSegment">
+            <span class="phase-segment-label">1. ส่งเสียงเรียก (<span id="callSecDisplay">3</span>s)</span>
+            <div class="phase-fill" id="callPhaseFill" style="inline-size: 38%"></div>
+          </div>
+          <div class="phase-segment phase-segment-listen" id="listenPhaseSegment">
+            <span class="phase-segment-label">2. เงียบฟังเสียงเหมียวตอบ (<span id="listenSecDisplay">4</span>s)</span>
+            <div class="phase-fill" id="listenPhaseFill"></div>
+          </div>
+        </div>
+
+        <div class="spectrum-box">
+          <div class="spectrum-meta">
+            <span class="spectrum-range-label">ย่านความถี่หูแมว 400 Hz – 6.0 kHz</span>
+            <span id="liveDbReadout" class="spectrum-db-readout">ระดับสัญญาณ: รอส่งเสียง</span>
+          </div>
+          <canvas id="spectrumCanvas" width="640" height="56" aria-label="กราฟแสดงคลื่นความถี่เสียงเรียกและเสียงตอบรับ"></canvas>
+          <script>
+            (function () {
+              var c = document.getElementById('spectrumCanvas');
+              if (!c || !c.getContext) return;
+              var ctx = c.getContext('2d');
+              var w = c.width, h = c.height, bars = 24, gap = 5;
+              var bw = (w - gap * (bars - 1)) / bars;
+              var heights = [0.22, 0.28, 0.36, 0.31, 0.25, 0.42, 0.54, 0.48, 0.35, 0.40, 0.62, 0.72, 0.58, 0.46, 0.38, 0.50, 0.44, 0.32, 0.36, 0.28, 0.24, 0.30, 0.22, 0.18];
+              for (var i = 0; i < bars; i++) {
+                var bh = Math.round(heights[i] * (h - 8));
+                var x = i * (bw + gap);
+                var y = h - bh;
+                ctx.fillStyle = i >= 9 && i <= 16 ? '#E05A4E' : '#F09A3E';
+                ctx.fillRect(x, y, bw, bh);
+              }
+            })();
+          </script>
+        </div>
+      </div>
+
+      <!-- Active Sequence Queue Strip -->
+      <div class="queue-strip">
+        <div class="queue-label-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="8" y1="6" x2="21" y2="6"/>
+            <line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/>
+            <line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/>
+            <line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+          <span class="queue-title">คิวเสียงที่จะสลับเล่น (<span id="queueCountText">3</span>/3):</span>
+        </div>
+        <div id="queueChipList" class="queue-chip-list" role="list" aria-label="รายการเสียงในคิวเรียกอัตโนมัติ">
+          <div class="queue-chip" role="listitem"><span>1. แม่แมวเรียกหาลูก</span><button type="button" class="queue-chip-remove" aria-label="ลบ แม่แมวเรียกหาลูก ออกจากคิว">×</button></div>
+          <div class="queue-chip" role="listitem"><span>2. ลูกแมวร้องเรียกหา</span><button type="button" class="queue-chip-remove" aria-label="ลบ ลูกแมวร้องเรียกหา ออกจากคิว">×</button></div>
+          <div class="queue-chip" role="listitem"><span>3. เปิดกระป๋องอาหารเปียก</span><button type="button" class="queue-chip-remove" aria-label="ลบ เปิดกระป๋องอาหารเปียก ออกจากคิว">×</button></div>
+        </div>
+      </div>
+    </section>
+  </header>
+
+  <!-- Main Responsive Split Workspace (Single column on mobile, Two columns on Tablet/Desktop) -->
+  <main id="main-workspace" class="workspace-grid">
+    <!-- Left / Primary Column: Scenarios, 12 Acoustic Pads, & Tuning -->
+    <div class="workspace-primary">
+      <!-- Scenario Quick Presets -->
+      <section class="panel-section" aria-labelledby="presetHeading">
+        <div class="section-header">
+          <h2 id="presetHeading" class="section-title">เลือกโหมดตามนิสัยและอาการของแมว</h2>
+          <p class="section-desc">จัดชุดลำดับเสียง ความถี่ และช่วงเวลาเงียบฟังให้เหมาะกับสถานการณ์</p>
+        </div>
+
+        <div id="presetList" class="preset-strip" role="radiogroup" aria-labelledby="presetHeading">
+          <button type="button" class="preset-btn" role="radio" aria-checked="true">
+            <span class="preset-btn-title">ให้แมวร้องเหมียวตอบรับ</span>
+            <span class="preset-btn-sub">เน้นเสียงแม่แมว + ลูกแมว + เว้นช่วงเงียบ 4 วินาทีเพื่อฟังเสียงขานรับ</span>
+          </button>
+          <button type="button" class="preset-btn" role="radio" aria-checked="false">
+            <span class="preset-btn-title">ล่อแมวหิวออกจากที่ซ่อน</span>
+            <span class="preset-btn-sub">คอมโบเปิดกระป๋องอาหารเปียก + เขย่าถุงขนม + เคาะชามข้าว</span>
+          </button>
+          <button type="button" class="preset-btn" role="radio" aria-checked="false">
+            <span class="preset-btn-title">แมวขี้กลัว / เพิ่งย้ายบ้าน</span>
+            <span class="preset-btn-sub">โทนเสียงนุ่ม ลดความถี่แหลม ใช้เสียงกรนสลับเสียงแม่แมวเรียกเบาๆ</span>
+          </button>
+          <button type="button" class="preset-btn" role="radio" aria-checked="false">
+            <span class="preset-btn-title">ล่อนักล่าจอมซนให้โผล่หัว</span>
+            <span class="preset-btn-sub">เสียงนกกระจอก + ขยำซองฟอยล์ + คลื่นความถี่กระตุ้นใบหู</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 12 Acoustic Sound Triggers -->
+      <section class="panel-section" aria-labelledby="soundDeckHeading">
+        <div class="section-header-row">
+          <div>
+            <h2 id="soundDeckHeading" class="section-title">คลังเสียงเรียกแมวชีวภาพและเสียงล่อ 12 ความถี่</h2>
+            <p class="section-desc">แตะที่แถวเพื่อเล่นเสียงทันที · กดปุ่ม <strong>+ คิว</strong> เพื่อใส่ในรอบวนเรียก · กด <strong>แมวหัน</strong> เพื่อจำเสียงที่ได้ผล</p>
+          </div>
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <div class="category-tabs" role="tablist" aria-label="หมวดหมู่เสียงเรียกแมว">
+          <button type="button" role="tab" class="cat-tab is-active" aria-selected="true" data-category="all">
+            ทั้งหมด (12)
+          </button>
+          <button type="button" role="tab" class="cat-tab" aria-selected="false" data-category="vocal">
+            เรียกให้ร้องตอบ (4)
+          </button>
+          <button type="button" role="tab" class="cat-tab" aria-selected="false" data-category="food">
+            ล่อด้วยของกิน (4)
+          </button>
+          <button type="button" role="tab" class="cat-tab" aria-selected="false" data-category="prey">
+            กระตุ้นนักล่า (2)
+          </button>
+          <button type="button" role="tab" class="cat-tab" aria-selected="false" data-category="sonic">
+            ความถี่พิเศษ (2)
+          </button>
+          <button type="button" role="tab" class="cat-tab" aria-selected="false" data-category="worked">
+            เสียงที่ได้ผล (<span id="workedTabCount">0</span>)
+          </button>
+        </div>
+
+        <!-- Sound Pad Grid (Container-query responsive) -->
+        <div id="soundPadContainer" class="sound-pad-container">
+          <div id="soundPadGrid" class="sound-pad-grid" role="list">
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง แม่แมวเรียกหาลูก (Mother Cat Chirrup (Prrt-ek))">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">แม่แมวเรียกหาลูก</span>
+                    <span class="sound-pad-cat-tag">เรียกให้แมวร้องตอบ</span>
+                  </div>
+                  <span class="sound-pad-sub">Mother Cat Chirrup (Prrt-ek)</span>
+                  <span class="sound-pad-purpose">กระตุ้นสัญชาตญาณขานรับกลับ (ได้ผลสูงสุดเวลาแมวแอบ)</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 280 – 1,950 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="true">ในคิวแล้ว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="true">แมวหันแล้ว</button>
+                </div>
+              </div>
+            </div>
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง ลูกแมวร้องเรียกหา (Lost Kitten High Mew)">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">ลูกแมวร้องเรียกหา</span>
+                    <span class="sound-pad-cat-tag">เรียกให้แมวร้องตอบ</span>
+                  </div>
+                  <span class="sound-pad-sub">Lost Kitten High Mew</span>
+                  <span class="sound-pad-purpose">ทำให้แมวโตเดินออกมาดูต้นเสียง หรือร้องเหมียวถามกลับ</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 780 – 3,100 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="true">ในคิวแล้ว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="false">แมวหัน</button>
+                </div>
+              </div>
+            </div>
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง เหมียวทักทายอ้อนๆ (Friendly Greeting Meow)">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">เหมียวทักทายอ้อนๆ</span>
+                    <span class="sound-pad-cat-tag">เรียกให้แมวร้องตอบ</span>
+                  </div>
+                  <span class="sound-pad-sub">Friendly Greeting Meow</span>
+                  <span class="sound-pad-purpose">เสียงทักทายโทนเป็นมิตร ลดความระแวงเวลาแมวซ่อนใต้เตียง</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 360 – 1,650 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="false">+ คิว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="false">แมวหัน</button>
+                </div>
+              </div>
+            </div>
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง กรนครืดๆ สลับเรียกเบาๆ (Comfort Purr & Soft Trill)">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">กรนครืดๆ สลับเรียกเบาๆ</span>
+                    <span class="sound-pad-cat-tag">เรียกให้แมวร้องตอบ</span>
+                  </div>
+                  <span class="sound-pad-sub">Comfort Purr & Soft Trill</span>
+                  <span class="sound-pad-purpose">คลื่นความถี่ต่ำช่วยให้แมวขี้กลัวรู้สึกปลอดภัยและคลานออกมา</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 26 – 640 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="false">+ คิว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="false">แมวหัน</button>
+                </div>
+              </div>
+            </div>
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง เปิดกระป๋องอาหารเปียก (Wet Food Can Pull-Tab & Pop)">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">เปิดกระป๋องอาหารเปียก</span>
+                    <span class="sound-pad-cat-tag">ล่อด้วยเสียงของกิน</span>
+                  </div>
+                  <span class="sound-pad-sub">Wet Food Can Pull-Tab & Pop</span>
+                  <span class="sound-pad-purpose">จำลองเสียงงัดห่วงโลหะ + ฝาป๊อป + เคาะขอบกระป๋อง</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 900 – 5,800 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="true">ในคิวแล้ว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="true">แมวหันแล้ว</button>
+                </div>
+              </div>
+            </div>
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง เขย่าถุงขนม/อาหารเม็ด (Treat Bag & Kibble Shake)">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">เขย่าถุงขนม/อาหารเม็ด</span>
+                    <span class="sound-pad-cat-tag">ล่อด้วยเสียงของกิน</span>
+                  </div>
+                  <span class="sound-pad-sub">Treat Bag & Kibble Shake</span>
+                  <span class="sound-pad-purpose">เสียงเม็ดขนมกระทบซองฟอยล์เป็นจังหวะ เรียกแมวสายกิน</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 650 – 6,400 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="false">+ คิว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="false">แมวหัน</button>
+                </div>
+              </div>
+            </div>
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง เคาะชามเซรามิกเรียกกินข้าว (Ceramic Bowl & Spoon Clink)">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">เคาะชามเซรามิกเรียกกินข้าว</span>
+                    <span class="sound-pad-cat-tag">ล่อด้วยเสียงของกิน</span>
+                  </div>
+                  <span class="sound-pad-sub">Ceramic Bowl & Spoon Clink</span>
+                  <span class="sound-pad-purpose">เสียงช้อนเคาะขอบชามกระเบื้องกังวาน ทะลุผ่านประตูห้องได้ดี</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 1,180 – 4,620 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="false">+ คิว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="false">แมวหัน</button>
+                </div>
+              </div>
+            </div>
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง ขยำซองขนมแมวเลีย (Sachet & Foil Crinkle)">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">ขยำซองขนมแมวเลีย</span>
+                    <span class="sound-pad-cat-tag">ล่อด้วยเสียงของกิน</span>
+                  </div>
+                  <span class="sound-pad-sub">Sachet & Foil Crinkle</span>
+                  <span class="sound-pad-purpose">เสียงกรอบแกรบความถี่สูงที่หูแมวจับทิศทางได้แม่นยำมาก</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 2,800 – 7,800 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="false">+ คิว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="false">แมวหัน</button>
+                </div>
+              </div>
+            </div>
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง นกกระจอกร้องริมหน้าต่าง (Window Sparrow Chirp)">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">นกกระจอกร้องริมหน้าต่าง</span>
+                    <span class="sound-pad-cat-tag">กระตุ้นสัญชาตญาณนักล่า</span>
+                  </div>
+                  <span class="sound-pad-sub">Window Sparrow Chirp</span>
+                  <span class="sound-pad-purpose">กระตุ้นให้แมวทำเสียงแคร็กๆ (Ek-ek-ek) หรือโผล่หัวออกมาส่อง</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 2,600 – 4,400 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="false">+ คิว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="false">แมวหัน</button>
+                </div>
+              </div>
+            </div>
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง หนูจี๊ดๆ วิ่งตามซอก (Rodent Squeak & Scurry)">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">หนูจี๊ดๆ วิ่งตามซอก</span>
+                    <span class="sound-pad-cat-tag">กระตุ้นสัญชาตญาณนักล่า</span>
+                  </div>
+                  <span class="sound-pad-sub">Rodent Squeak & Scurry</span>
+                  <span class="sound-pad-purpose">ดึงความสนใจแมวที่แอบหลับในตู้หรือใต้โซฟาให้หูตั้งทันที</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 3,800 – 5,600 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="false">+ คิว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="false">แมวหัน</button>
+                </div>
+              </div>
+            </div>
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง เสียงจุ๊ปาก & ชู่วๆ เรียกแมว (Pss-Pss-Pss & Tongue Clicks)">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">เสียงจุ๊ปาก & ชู่วๆ เรียกแมว</span>
+                    <span class="sound-pad-cat-tag">ความถี่พิเศษ & เสียงคุณ</span>
+                  </div>
+                  <span class="sound-pad-sub">Pss-Pss-Pss & Tongue Clicks</span>
+                  <span class="sound-pad-purpose">เสียงเรียกคุ้นเคยของทาสแมว ผสมจังหวะเดาะลิ้นความถี่ชัด</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 1,400 – 7,500 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="false">+ คิว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="false">แมวหัน</button>
+                </div>
+              </div>
+            </div>
+            <div class="sound-pad-item" role="listitem">
+              <button type="button" class="sound-pad-main-btn" aria-label="เล่นเสียง คลื่นความถี่กระตุ้นหูแมว (Feline Ear-Perk Chime (3–6 kHz))">
+                <div class="sound-pad-copy">
+                  <div class="sound-pad-title-row">
+                    <span class="sound-pad-title">คลื่นความถี่กระตุ้นหูแมว</span>
+                    <span class="sound-pad-cat-tag">ความถี่พิเศษ & เสียงคุณ</span>
+                  </div>
+                  <span class="sound-pad-sub">Feline Ear-Perk Chime (3–6 kHz)</span>
+                  <span class="sound-pad-purpose">ฮาร์มอนิกย่านที่ใบหูแมวไวที่สุด ช่วยให้แมวหันหูและโผล่หน้าออกมา</span>
+                </div>
+                <span class="sound-play-pill" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+                  </svg>
+                </span>
+              </button>
+              <div class="sound-pad-footer">
+                <span class="sound-freq-label">ความถี่ 3,000 – 6,200 Hz</span>
+                <div class="sound-pad-actions">
+                  <button type="button" class="mini-action-btn" aria-pressed="false">+ คิว</button>
+                  <button type="button" class="mini-action-btn worked-btn" aria-pressed="false">แมวหัน</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Acoustic & Cycle Tuning Controls -->
+      <section class="panel-section" aria-labelledby="tuningHeading">
+        <div class="section-header">
+          <h2 id="tuningHeading" class="section-title">ปรับจูนโทนเสียงและจังหวะการเงียบฟัง</h2>
+          <p class="section-desc">แมวแต่ละตัวชอบโทนเสียงสูง–ต่ำต่างกัน ลองขยับ Pitch หรือเพิ่มเวลาเงียบฟังหากบ้านกว้าง</p>
+        </div>
+
+        <div class="tuning-grid">
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label for="volumeSlider">ความดังเสียงเรียก (Master Volume)</label>
+              <output for="volumeSlider" id="volumeValueText" class="slider-output">85%</output>
+            </div>
+            <input type="range" id="volumeSlider" min="10" max="100" step="5" value="85" aria-valuetext="ความดัง 85 เปอร์เซ็นต์">
+          </div>
+
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label for="pitchSlider">ระดับโทนเสียงสูง–ต่ำ (Pitch Shift)</label>
+              <output for="pitchSlider" id="pitchValueText" class="slider-output">ปกติ (1.00x)</output>
+            </div>
+            <input type="range" id="pitchSlider" min="75" max="125" step="5" value="100" aria-valuetext="โทนเสียงปกติ 1.00 เท่า">
+          </div>
+
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label for="callDurationSlider">เวลาส่งเสียงต่อรอบ (Call Window)</label>
+              <output for="callDurationSlider" id="callDurationText" class="slider-output">3 วินาที</output>
+            </div>
+            <input type="range" id="callDurationSlider" min="2" max="6" step="1" value="3" aria-valuetext="ส่งเสียงนาน 3 วินาที">
+          </div>
+
+          <div class="slider-field">
+            <div class="slider-label-row">
+              <label for="listenDurationSlider">เวลาเงียบฟังเสียงขานรับ (Listen Window)</label>
+              <output for="listenDurationSlider" id="listenDurationText" class="slider-output">4 วินาที</output>
+            </div>
+            <input type="range" id="listenDurationSlider" min="2" max="8" step="1" value="4" aria-valuetext="เงียบฟังเสียงขานรับนาน 4 วินาที">
+          </div>
+        </div>
+
+        <div class="switch-row-list">
+          <label class="switch-item" for="gentleModeSwitch">
+            <span class="switch-copy">
+              <strong class="switch-title">โหมดแมวขี้กลัว (Gentle Soft-Filter)</strong>
+              <span class="switch-desc">กรองความถี่แหลมเกิน 3.8 kHz ออกและลดความตกใจ เหมาะกับแมวตื่นกลัวหรือเพิ่งย้ายบ้าน</span>
+            </span>
+            <input type="checkbox" id="gentleModeSwitch" switch>
+          </label>
+
+          <label class="switch-item" for="autoMicSwitch">
+            <span class="switch-copy">
+              <strong class="switch-title">เปิดเรดาร์ไมโครโฟนช่วยฟังช่วงเงียบอัตโนมัติ</strong>
+              <span class="switch-desc">วิเคราะห์เสียงเหมียวหรือเสียงกุกกักเฉพาะตอนที่แอปหยุดส่งเสียง เพื่อไม่ให้เสียงลำโพงกวนกัน</span>
+            </span>
+            <input type="checkbox" id="autoMicSwitch" switch>
+          </label>
+        </div>
+      </section>
+    </div>
+
+    <!-- Right / Secondary Column: Ear-Perk Radar, Custom Voice Sampler, & Hiding Spot Checklist -->
+    <aside class="workspace-secondary" aria-label="เรดาร์ฟังเสียงขานรับ เสียงเรียกชื่อแมว และเช็คลิสต์จุดซ่อน">
+      <!-- Live Ear-Perk Listening Radar & Detection Log -->
+      <section class="panel-section radar-panel" aria-labelledby="radarHeading">
+        <div class="section-header">
+          <h2 id="radarHeading" class="section-title">เรดาร์จับเสียงแมวขานรับช่วงเงียบ</h2>
+          <p class="section-desc">เมื่ออยู่ในช่วงเงียบฟังเสียง หากมีเสียงร้องเหมียวหรือเสียงขยับตัว ระบบจะบันทึกเวลาและห้องไว้ให้ทันที</p>
+        </div>
+
+        <div id="radarAlertBanner" class="radar-alert-banner" data-detected="false" role="status" aria-live="polite">
+          <div class="radar-indicator-dot" aria-hidden="true"></div>
+          <div class="radar-alert-copy">
+            <strong id="radarStatusTitle">สถานะเรดาร์: รอฟังเสียงในจังหวะเงียบ</strong>
+            <span id="radarStatusSub">กดเปิดไมค์ช่วยฟัง หรือกดปุ่มจำลองเสียงขานรับเพื่อทดสอบสัญญาณเตือน</span>
+          </div>
+        </div>
+
+        <div class="radar-action-bar">
+          <button type="button" id="enableMicBtn" class="secondary-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <line x1="12" y1="19" x2="12" y2="23"/>
+              <line x1="8" y1="23" x2="16" y2="23"/>
+            </svg>
+            <span id="enableMicBtnText">เปิดไมค์ช่วยฟังเสียง</span>
+          </button>
+
+          <button type="button" id="simulateReplyBtn" class="secondary-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+            <span>จำลองเสียงแมวขานรับ</span>
+          </button>
+        </div>
+
+        <div class="detection-log-wrap">
+          <div class="log-header-bar">
+            <span class="log-title">บันทึกสัญญาณเสียงที่ตรวจพบ (<span id="detectionCount">0</span>)</span>
+            <button type="button" id="clearLogBtn" class="text-action-btn">ล้างประวัติ</button>
+          </div>
+          <ul id="detectionLogList" class="detection-log-list" aria-label="ประวัติการตรวจพบเสียงตอบรับ">
+            <li class="detection-log-empty">ยังไม่มีประวัติเสียงขานรับ · เริ่มวนเรียกแมวเพื่อให้ระบบช่วยฟังช่วงเงียบ</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Custom Owner Voice Recorder -->
+      <section class="panel-section" aria-labelledby="voiceRecorderHeading">
+        <div class="section-header">
+          <h2 id="voiceRecorderHeading" class="section-title">เสียงคุณเรียกชื่อแมวตัวเอง</h2>
+          <p class="section-desc">แมวมักจำเสียงเจ้าของเรียกชื่อหรือเสียงเคาะกระปุกขนมประจำบ้านได้ดีที่สุด อัดไว้เปิดวนในคิวได้ทันที</p>
+        </div>
+
+        <div class="voice-recorder-box">
+          <div class="voice-status-row">
+            <span id="customVoiceBadge" class="voice-state-pill" data-recorded="false">ใช้เสียงเรียกจำลองมาตรฐาน</span>
+            <span id="recordTimerText" class="voice-timer">3.0 วินาที</span>
+          </div>
+
+          <div class="voice-btn-row">
+            <button type="button" id="recordVoiceBtn" class="secondary-btn voice-record-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="7" fill="currentColor"/>
+              </svg>
+              <span id="recordVoiceBtnText">อัดเสียงเรียกชื่อแมว (3 วิ)</span>
+            </button>
+
+            <button type="button" id="playCustomVoiceBtn" class="secondary-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span>ฟังเสียง</span>
+            </button>
+
+            <button type="button" id="queueCustomVoiceBtn" class="secondary-btn">
+              <span>+ ใส่คิววน</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Hiding Spot Checklist -->
+      <section class="panel-section" aria-labelledby="checklistHeading">
+        <div class="section-header">
+          <div class="checklist-title-row">
+            <h2 id="checklistHeading" class="section-title">เช็คลิสต์จุดซ่อนยอดฮิตในบ้าน</h2>
+            <span id="checklistProgressText" class="checklist-counter">ตรวจแล้ว 0/8 จุด</span>
+          </div>
+          <p class="section-desc">เลือกจุดที่คุณกำลังเดินไปส่องแล้วเปิดเสียงเรียก เพื่อไม่ให้ค้นซ้ำจุดเดิมเวลาตื่นเต้น</p>
+        </div>
+
+        <div class="room-selector-row">
+          <label for="activeRoomSelect" class="room-select-label">จุดที่กำลังเดินค้นหาตอนนี้:</label>
+          <select id="activeRoomSelect" class="room-select">
+            <option value="ห้องนอน / ใต้เตียง">ห้องนอน / ใต้เตียง</option>
+            <option value="ห้องนั่งเล่น / ใต้โซฟา">ห้องนั่งเล่น / ใต้โซฟา</option>
+            <option value="ในตู้เสื้อผ้า / ลิ้นชัก">ในตู้เสื้อผ้า / ลิ้นชัก</option>
+            <option value="ห้องครัว / หลังตู้เย็น">ห้องครัว / หลังตู้เย็น</option>
+            <option value="ระเบียง / หลังมุ้งลวด">ระเบียง / หลังมุ้งลวด</option>
+            <option value="หลังเครื่องซักผ้า / ห้องน้ำ">หลังเครื่องซักผ้า / ห้องน้ำ</option>
+          </select>
+        </div>
+
+        <ul id="hidingSpotList" class="hiding-spot-list" aria-label="รายการจุดซ่อนแมวในบ้าน">
+          <li class="hiding-spot-item">
+            <label class="hiding-spot-label">
+              <input type="checkbox">
+              <span class="spot-name-text">ใต้เตียงนอน (ลึกชิดหัวเตียง)</span>
+            </label>
+            <span class="spot-room-badge">ห้องนอน / ใต้เตียง</span>
+          </li>
+          <li class="hiding-spot-item">
+            <label class="hiding-spot-label">
+              <input type="checkbox">
+              <span class="spot-name-text">ในตู้เสื้อผ้า / ตะกร้าผ้าซัก</span>
+            </label>
+            <span class="spot-room-badge">ในตู้เสื้อผ้า / ลิ้นชัก</span>
+          </li>
+          <li class="hiding-spot-item">
+            <label class="hiding-spot-label">
+              <input type="checkbox">
+              <span class="spot-name-text">ใต้โซฟา หรือซอกเบาะพิงหลัง</span>
+            </label>
+            <span class="spot-room-badge">ห้องนั่งเล่น / ใต้โซฟา</span>
+          </li>
+          <li class="hiding-spot-item">
+            <label class="hiding-spot-label">
+              <input type="checkbox">
+              <span class="spot-name-text">ข้างหรือหลังตู้เย็น / ไมโครเวฟ (จุดอุ่น)</span>
+            </label>
+            <span class="spot-room-badge">ห้องครัว / หลังตู้เย็น</span>
+          </li>
+          <li class="hiding-spot-item">
+            <label class="hiding-spot-label">
+              <input type="checkbox">
+              <span class="spot-name-text">หลังเครื่องซักผ้า หรือใต้อ่างล้างหน้า</span>
+            </label>
+            <span class="spot-room-badge">หลังเครื่องซักผ้า / ห้องน้ำ</span>
+          </li>
+          <li class="hiding-spot-item">
+            <label class="hiding-spot-label">
+              <input type="checkbox">
+              <span class="spot-name-text">ในกล่องพัสดุ / ถุงกระดาษ / กระเป๋าเดินทาง</span>
+            </label>
+            <span class="spot-room-badge">ห้องนั่งเล่น / ใต้โซฟา</span>
+          </li>
+          <li class="hiding-spot-item">
+            <label class="hiding-spot-label">
+              <input type="checkbox">
+              <span class="spot-name-text">หลังผ้าม่านทึบ หรือขอบหน้าต่าง</span>
+            </label>
+            <span class="spot-room-badge">ห้องนอน / ใต้เตียง</span>
+          </li>
+          <li class="hiding-spot-item">
+            <label class="hiding-spot-label">
+              <input type="checkbox">
+              <span class="spot-name-text">ซอกกระถางต้นไม้ หรือใต้เก้าอี้ระเบียง</span>
+            </label>
+            <span class="spot-room-badge">ระเบียง / หลังมุ้งลวด</span>
+          </li>
+        </ul>
+
+        <form id="addSpotForm" class="add-spot-form" novalidate>
+          <label for="newSpotInput" class="sr-only">เพิ่มจุดซ่อนในบ้านของคุณ</label>
+          <input type="text" id="newSpotInput" class="spot-input" placeholder="เพิ่มจุดซ่อนประจำบ้าน เช่น บนหลังแอร์..." required minlength="2" maxlength="60">
+          <button type="submit" class="secondary-btn">เพิ่มจุดตรวจ</button>
+        </form>
+
+        <div class="checklist-footer">
+          <button type="button" id="foundCatBtn" class="found-cat-btn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 6 9 17l-5-5"/>
+            </svg>
+            <span>เจอตัวเจ้าเหมียวแล้ว! (หยุดเสียงและบันทึกจุดที่เจอ)</span>
+          </button>
+          <button type="button" id="resetChecklistBtn" class="text-action-btn">รีเซ็ตเช็คลิสต์</button>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <!-- Mobile Sticky One-Thumb Bottom Bar (Visible on small viewports) -->
+  <nav class="mobile-thumb-bar" aria-label="แถบควบคุมด่วนสำหรับถือมือเดียว">
+    <button type="button" id="mobileCycleBtn" class="thumb-bar-primary" data-running="false">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+      </svg>
+      <span id="mobileCycleBtnText">เริ่มวนเรียกแมว</span>
+    </button>
+
+    <button type="button" id="mobileMotherCallBtn" class="thumb-bar-btn">
+      <span>เสียงแม่แมว</span>
+    </button>
+
+    <button type="button" id="mobileWetCanBtn" class="thumb-bar-btn">
+      <span>เปิดกระป๋อง</span>
+    </button>
+
+    <button type="button" id="mobileTorchBtn" class="thumb-bar-btn">
+      <span>ไฟฉาย</span>
+    </button>
+  </nav>
+
+  <!-- Under-Sofa / Dark Closet Screen Torch Modal Dialog (Light-Dismiss enabled via closedby="any") -->
+  <dialog id="torchDialog" class="torch-dialog" closedby="any" aria-labelledby="torchDialogTitle">
+    <div class="torch-dialog-surface" id="torchSurface" data-beam="amber">
+      <div class="torch-header">
+        <h2 id="torchDialogTitle" class="torch-title">ไฟฉายส่องหาแมวใต้เตียงและในตู้มืด</h2>
+        <button type="button" id="closeTorchBtn" class="torch-close-btn" aria-label="ปิดหน้าต่างไฟฉาย">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <p class="torch-instructions">
+        ดันความสว่างหน้าจอขึ้นแล้วส่องเข้าไปใต้เตียงหรือซอกตู้ สังเกต <strong>ประกายสะท้อนจากดวงตาแมว (Tapetum Lucidum)</strong> พร้อมกดปุ่มส่งเสียงเรียกด้านล่างเพื่อดูว่าแมวหันมามองหรือไม่
+      </p>
+
+      <div class="torch-reticle" aria-hidden="true">
+        <svg width="120" height="72" viewBox="0 0 120 72" fill="none">
+          <ellipse cx="34" cy="36" rx="16" ry="22" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+          <ellipse cx="34" cy="36" rx="4" ry="14" fill="currentColor"/>
+          <ellipse cx="86" cy="36" rx="16" ry="22" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4"/>
+          <ellipse cx="86" cy="36" rx="4" ry="14" fill="currentColor"/>
+        </svg>
+        <span class="torch-reticle-caption">มองหาจุดสะท้อนแสงคู่ในเงามืด</span>
+      </div>
+
+      <div class="torch-beam-selector" role="radiogroup" aria-label="เลือกโทนแสงไฟฉายหน้าจอ">
+        <button type="button" class="beam-btn is-selected" data-beam-color="amber" role="radio" aria-checked="true">
+          แสงอุ่นถนอมตาแมว (Amber)
+        </button>
+        <button type="button" class="beam-btn" data-beam-color="white" role="radio" aria-checked="false">
+          แสงขาวสว่างสุด (Max White)
+        </button>
+        <button type="button" class="beam-btn" data-beam-color="emerald" role="radio" aria-checked="false">
+          แสงเขียวสะท้อนตา (Eye-Shine)
+        </button>
+      </div>
+
+      <div class="torch-controls-footer">
+        <button type="button" id="torchCallBtn" class="cycle-cta-btn torch-call-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+          <span>ส่งเสียงเรียกแม่แมวขณะส่องไฟ</span>
+        </button>
+
+        <button type="button" id="hardwareFlashBtn" class="secondary-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          <span id="hardwareFlashText">เปิดไฟแฟลชกล้องหลัง (ถ้าอุปกรณ์รองรับ)</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
