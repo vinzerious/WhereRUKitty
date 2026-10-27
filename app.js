@@ -1592,6 +1592,23 @@ function drawSpectrumCanvas(bars, phase, detected) {
 }
 
 /**
+ * Register the app-shell service worker without blocking startup.
+ */
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+  try {
+    navigator.serviceWorker.register('./service-worker.js', {
+      scope: './',
+      updateViaCache: 'none'
+    }).catch((err) => {
+      console.warn('Service worker registration failed:', err);
+    });
+  } catch (err) {
+    console.warn('Service worker registration failed:', err);
+  }
+}
+
+/**
  * Initialize Application
  */
 function init() {
@@ -1632,6 +1649,12 @@ function init() {
   try {
     updateCustomVoiceUI();
   } catch (_) {}
+
+  try {
+    registerServiceWorker();
+  } catch (err) {
+    console.warn('Service worker init warning:', err);
+  }
 
   try {
     requestAnimationFrame(renderLoopFrame);
