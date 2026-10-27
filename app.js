@@ -17,6 +17,7 @@ import {
   setSpeciesValue,
   setGlobalValue
 } from './tuning-store.js';
+import { createWakeLockController } from './wake-lock-controller.js';
 
 const DEFAULT_HIDING_SPOTS = [
   { id: 'spot-1', name: 'ใต้เตียงนอน (ลึกชิดหัวเตียง)', room: 'ห้องนอน / ใต้เตียง', checked: false },
@@ -95,6 +96,8 @@ const tuningStorage = {
 };
 
 const audioEngine = new FelineAudioEngine();
+
+let wakeLockController = null;
 
 const initialTuning = loadTuning(tuningStorage, {
   cat: SCENARIO_PRESETS,
@@ -358,15 +361,22 @@ function initSwitches() {
  */
 function initTorchDialog() {
   const openModal = () => {
-    if (!torchDialog.open) {
-      torchDialog.showModal();
+    try {
+      if (!torchDialog.open) {
+        torchDialog.showModal();
+      }
+    } catch (err) {
+      console.warn('Could not open torch dialog:', err);
+      return;
     }
+    wakeLockController?.acquire('torch');
   };
 
   openTorchBtn.addEventListener('click', openModal);
   mobileTorchBtn.addEventListener('click', openModal);
   closeTorchBtn.addEventListener('click', () => torchDialog.close());
   torchDialog.addEventListener('close', async () => {
+    wakeLockController?.release('torch');
     if (state.hardwareTorchSession) {
       await releaseHardwareTorch(state.hardwareTorchSession);
       state.hardwareTorchSession = null;
@@ -1031,19 +1041,28 @@ function triggerSingleSound(soundId) {
  */
 async function startCallListenCycle() {
   clearTimeout(state.singlePlayTimer);
-  if (state.autoMic && !state.micActive) {
-    const res = await audioEngine.enableMicrophoneRadar();
-    state.micActive = res.active;
-    updateRadarControls();
-  }
+  wakeLockController?.acquire('cycle');
 
-  state.cycleRunning = true;
-  state.queueIndex = 0;
-  enterCallingPhase();
-  updateCycleButtons();
+  try {
+    if (state.autoMic && !state.micActive) {
+      const res = await audioEngine.enableMicrophoneRadar();
+      state.micActive = res.active;
+      updateRadarControls();
+    }
+
+    state.cycleRunning = true;
+    state.queueIndex = 0;
+    enterCallingPhase();
+    updateCycleButtons();
+  } catch (err) {
+    wakeLockController?.release('cycle');
+    stopCallListenCycle();
+    console.warn('Could not start call/listen cycle:', err);
+  }
 }
 
 function stopCallListenCycle() {
+  wakeLockController?.release('cycle');
   state.cycleRunning = false;
   state.cyclePhase = 'idle';
   state.currentlyPlayingSoundId = null;
@@ -1634,6 +1653,17 @@ function init() {
     initSwitches();
   } catch (err) {
     console.warn('Switches init warning:', err);
+  }
+
+  try {
+    wakeLockController = createWakeLockController({
+      wakeLock: navigator.wakeLock,
+      documentRef: document,
+      windowRef: window,
+      onError: (err) => console.warn('Screen wake lock unavailable:', err)
+    });
+  } catch (err) {
+    console.warn('Screen wake lock init warning:', err);
   }
 
   try {
