@@ -1723,6 +1723,165 @@ input:not([type="range"]):user-invalid {
   display: none;
 }
 
+/* ==========================================================================
+   Found-Pet Recap Dialog
+   ========================================================================== */
+
+.found-dialog {
+  inline-size: min(94vw, 520px);
+  max-block-size: 90dvh;
+  border: 2px solid var(--border-strong);
+  border-radius: 0.75rem;
+  padding: 0;
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-shell);
+  overflow-y: auto;
+}
+
+.found-dialog::backdrop {
+  background-color: rgba(8, 15, 26, 0.78);
+  backdrop-filter: blur(3px);
+}
+
+.found-dialog-surface {
+  padding: 1.25rem;
+  border-radius: 0.625rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--bg-surface);
+}
+
+.found-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.found-dialog-icon {
+  display: grid;
+  place-items: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--accent-emerald-border);
+  background: var(--accent-emerald-soft);
+  color: var(--accent-emerald);
+}
+
+.found-dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.found-dialog-close:hover {
+  background: var(--bg-panel);
+}
+
+.found-dialog-title {
+  margin: 0;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.found-dialog-message {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.found-recap-list {
+  margin: 0;
+  display: grid;
+  gap: 0;
+}
+
+.found-recap-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding-block: 0.5rem;
+  border-block-end: 1px solid var(--border-subtle);
+}
+
+.found-recap-row:last-child {
+  border-block-end: 0;
+}
+
+.found-recap-row dt {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.found-recap-row dd {
+  margin: 0;
+  min-inline-size: 0;
+  text-align: end;
+  font-size: 0.875rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.found-dialog-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding-block-start: 0.25rem;
+}
+
+.found-recap-primary {
+  flex: 1 1 12rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 2.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 0.625rem;
+  border: 1px solid var(--accent-coral-border);
+  background-color: #B83227;
+  color: #FFFFFF;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 160ms ease-out;
+}
+
+.found-recap-primary:hover {
+  background-color: #99261C;
+}
+
+.found-dialog-secondary {
+  min-block-size: 2.75rem;
+}
+
+@media (max-width: 420px) {
+  .found-dialog-actions {
+    flex-direction: column;
+  }
+
+  .found-recap-primary,
+  .found-dialog-secondary {
+    inline-size: 100%;
+  }
+}
+
 /* Reduced Motion Preference per modern-web-guidance `motion` */
 @media (prefers-reduced-motion: reduce) {
   .header-btn,
@@ -1730,7 +1889,8 @@ input:not([type="range"]):user-invalid {
   .pulse-btn,
   .phase-fill,
   .sound-play-pill,
-  .torch-dialog-surface {
+  .torch-dialog-surface,
+  .found-recap-primary {
     transition: none;
   }
 }
