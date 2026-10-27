@@ -16,6 +16,7 @@ const PRECACHE_URLS = [
   "./audio-engine.js",
   "./torch-controller.js",
   "./tuning-store.js",
+  "./wake-lock-controller.js",
   "./manifest.webmanifest",
   "./icon.svg"
 ];
