@@ -18,6 +18,7 @@ import {
   setGlobalValue
 } from './tuning-store.js';
 import { createWakeLockController } from './wake-lock-controller.js';
+import { buildFoundRecap } from './found-recap.js';
 
 const DEFAULT_HIDING_SPOTS = [
   { id: 'spot-1', name: 'ใต้เตียงนอน (ลึกชิดหัวเตียง)', room: 'ห้องนอน / ใต้เตียง', checked: false },
@@ -238,6 +239,17 @@ const addSpotForm = document.getElementById('addSpotForm');
 const newSpotInput = document.getElementById('newSpotInput');
 const foundCatBtn = document.getElementById('foundCatBtn');
 const resetChecklistBtn = document.getElementById('resetChecklistBtn');
+const foundDialog = document.getElementById('foundDialog');
+const foundDialogTitle = document.getElementById('foundDialogTitle');
+const foundDialogMessage = document.getElementById('foundDialogMessage');
+const foundDialogRoom = document.getElementById('foundDialogRoom');
+const foundDialogTime = document.getElementById('foundDialogTime');
+const foundDialogSound = document.getElementById('foundDialogSound');
+const foundDialogProgress = document.getElementById('foundDialogProgress');
+const foundDialogDetection = document.getElementById('foundDialogDetection');
+const foundSearchAgainBtn = document.getElementById('foundSearchAgainBtn');
+const closeFoundDialogBtn = document.getElementById('closeFoundDialogBtn');
+const closeFoundDialogSecondaryBtn = document.getElementById('closeFoundDialogSecondaryBtn');
 
 const mobileCycleBtn = document.getElementById('mobileCycleBtn');
 const mobileCycleBtnText = document.getElementById('mobileCycleBtnText');
@@ -1497,16 +1509,92 @@ addSpotForm.addEventListener('submit', (e) => {
   renderHidingSpots();
 });
 
+let focusStartAfterFoundClose = false;
+
 foundCatBtn.addEventListener('click', () => {
   stopCallListenCycle();
-  const petName = state.species === 'dog' ? 'สุนัข' : 'แมว';
-  recordSoundDetection(`เจอตัว${petName}ที่ "${state.activeRoom}" แล้ว!`, 82);
+
+  const species = state.species;
+  const petName = species === 'dog' ? 'สุนัข' : 'แมว';
+  const room = state.activeRoom;
+  const soundTitle = getSoundMeta(state.selectedSoundId).title;
+  const checkedCount = state.hidingSpots.filter((spot) => spot.checked).length;
+  const totalCount = state.hidingSpots.length;
+  const priorDetectionCount = state.detectionLog.length;
+  const timeLabel = new Intl.DateTimeFormat('th-TH', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+  }).format(new Date());
+
+  recordSoundDetection(`เจอตัว${petName}ที่ "${room}" แล้ว!`, 82);
   if (!state.workedSounds.includes(state.selectedSoundId) && state.selectedSoundId !== 'custom-voice') {
     state.workedSounds.push(state.selectedSoundId);
     safeStorage.setItem(getWorkedStorageKey(), JSON.stringify(state.workedSounds));
     renderSoundPads();
   }
+
+  const recap = buildFoundRecap({
+    species,
+    room,
+    timeLabel,
+    soundTitle,
+    checkedCount,
+    totalCount,
+    priorDetectionCount
+  });
+
+  foundDialogTitle.textContent = recap.title;
+  foundDialogMessage.textContent = recap.message;
+  foundDialogRoom.textContent = recap.roomValue;
+  foundDialogTime.textContent = recap.timeValue;
+  foundDialogSound.textContent = recap.soundValue;
+  foundDialogProgress.textContent = recap.progressValue;
+  foundDialogDetection.textContent = recap.detectionValue;
+  foundSearchAgainBtn.textContent = recap.primaryAction;
+  closeFoundDialogSecondaryBtn.textContent = recap.secondaryAction;
+
+  try {
+    if (!foundDialog.open) {
+      foundDialog.showModal();
+    }
+  } catch (err) {
+    console.warn('Could not open found dialog:', err);
+  }
 });
+
+foundSearchAgainBtn.addEventListener('click', () => {
+  state.hidingSpots = state.hidingSpots.map((spot) => ({ ...spot, checked: false }));
+  safeStorage.setItem(getSpotsStorageKey(), JSON.stringify(state.hidingSpots));
+  renderHidingSpots();
+  focusStartAfterFoundClose = true;
+  foundDialog.close();
+});
+
+closeFoundDialogBtn.addEventListener('click', () => foundDialog.close());
+closeFoundDialogSecondaryBtn.addEventListener('click', () => foundDialog.close());
+
+foundDialog.addEventListener('close', () => {
+  if (!focusStartAfterFoundClose) return;
+  focusStartAfterFoundClose = false;
+  requestAnimationFrame(() => {
+    cycleToggleBtn.focus();
+  });
+});
+
+if (!('closedBy' in HTMLDialogElement.prototype)) {
+  foundDialog.addEventListener('click', (event) => {
+    if (event.target !== foundDialog) return;
+    const rect = foundDialog.getBoundingClientRect();
+    const isDialogContent =
+      rect.top <= event.clientY &&
+      event.clientY <= rect.top + rect.height &&
+      rect.left <= event.clientX &&
+      event.clientX <= rect.left + rect.width;
+    if (isDialogContent) return;
+    foundDialog.close();
+  });
+}
 
 resetChecklistBtn.addEventListener('click', () => {
   state.hidingSpots = getDefaultSpots().map((s) => ({ ...s, checked: false }));

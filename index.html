@@ -861,6 +861,55 @@
     </div>
   </dialog>
 
+  <!-- Found-Pet Recap Dialog -->
+  <dialog id="foundDialog" class="found-dialog" closedby="any" aria-labelledby="foundDialogTitle" aria-describedby="foundDialogMessage">
+    <div class="found-dialog-surface">
+      <div class="found-dialog-header">
+        <span class="found-dialog-icon" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+        </span>
+        <button type="button" id="closeFoundDialogBtn" class="found-dialog-close" aria-label="ปิดสรุปการค้นหา">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <h2 id="foundDialogTitle" class="found-dialog-title">เจอตัวเจ้าเหมียวแล้ว!</h2>
+      <p id="foundDialogMessage" class="found-dialog-message">เก่งมาก! ปิดเสียงเรียกและบันทึกการค้นหาไว้แล้ว</p>
+
+      <dl class="found-recap-list">
+        <div class="found-recap-row">
+          <dt>จุดที่เจอ</dt>
+          <dd id="foundDialogRoom">—</dd>
+        </div>
+        <div class="found-recap-row">
+          <dt>เวลา</dt>
+          <dd id="foundDialogTime">—</dd>
+        </div>
+        <div class="found-recap-row">
+          <dt>เสียงที่เล่นตอนเจอ</dt>
+          <dd id="foundDialogSound">—</dd>
+        </div>
+        <div class="found-recap-row">
+          <dt>ตรวจแล้ว</dt>
+          <dd id="foundDialogProgress">0/8 จุด</dd>
+        </div>
+        <div class="found-recap-row">
+          <dt>เสียงตอบรับก่อนเจอ</dt>
+          <dd id="foundDialogDetection">0 ครั้ง</dd>
+        </div>
+      </dl>
+
+      <div class="found-dialog-actions">
+        <button type="button" id="foundSearchAgainBtn" class="found-recap-primary" autofocus>ค้นหาอีกครั้ง</button>
+        <button type="button" id="closeFoundDialogSecondaryBtn" class="secondary-btn found-dialog-secondary">ปิด</button>
+      </div>
+    </div>
+  </dialog>
+
   <script type="module" src="app.js?v=20261024-3"></script>
 </body>
 </html>
