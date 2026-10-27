@@ -9,6 +9,14 @@ import {
   acquireHardwareTorch,
   releaseHardwareTorch
 } from './torch-controller.js';
+import {
+  loadTuning,
+  saveTuning,
+  getPresetById,
+  setSpeciesPreset,
+  setSpeciesValue,
+  setGlobalValue
+} from './tuning-store.js';
 
 const DEFAULT_HIDING_SPOTS = [
   { id: 'spot-1', name: 'ใต้เตียงนอน (ลึกชิดหัวเตียง)', room: 'ห้องนอน / ใต้เตียง', checked: false },
@@ -68,16 +76,45 @@ const safeStorage = {
   }
 };
 
+// Tuning may not inherit the generic pre-rebrand alias: no
+// `whererukitty_tuning` key existed before this feature, so read and write
+// only the exact key.
+const tuningStorage = {
+  getItem(key) {
+    try {
+      return localStorage.getItem(key);
+    } catch (_) {
+      return null;
+    }
+  },
+  setItem(key, value) {
+    try {
+      localStorage.setItem(key, String(value));
+    } catch (_) {}
+  }
+};
+
 const audioEngine = new FelineAudioEngine();
 
+const initialTuning = loadTuning(tuningStorage, {
+  cat: SCENARIO_PRESETS,
+  dog: DOG_SCENARIO_PRESETS
+});
+const storedSpecies = safeStorage.getItem('meowmeow_bokbok_species', 'cat');
+const initialSpecies = storedSpecies === 'dog' ? 'dog' : 'cat';
+const initialPresets = initialSpecies === 'dog' ? DOG_SCENARIO_PRESETS : SCENARIO_PRESETS;
+const initialRecord = initialTuning[initialSpecies];
+const initialPreset = getPresetById(initialPresets, initialRecord.presetId);
+
 const state = {
-  species: safeStorage.getItem('meowmeow_bokbok_species', 'cat'),
+  species: initialSpecies,
+  tuning: initialTuning,
   theme: safeStorage.getItem('meowmeow_bokbok_theme', 'day'),
-  activePresetId: 'vocal-reply',
+  activePresetId: initialPreset.id,
   activeCategory: 'all',
-  selectedSoundId: 'mother-trill',
+  selectedSoundId: initialPreset.sequence[0],
   currentlyPlayingSoundId: null,
-  queue: ['mother-trill', 'kitten-mew', 'wet-can'],
+  queue: [...initialPreset.sequence],
   queueIndex: 0,
   workedSounds: (() => {
     try {
@@ -86,12 +123,12 @@ const state = {
       return ['mother-trill', 'wet-can'];
     }
   })(),
-  callSeconds: 3,
-  listenSeconds: 4,
-  volume: 85,
-  pitch: 100,
-  gentleMode: false,
-  autoMic: false,
+  callSeconds: initialRecord.callSeconds,
+  listenSeconds: initialRecord.listenSeconds,
+  volume: initialTuning.volume,
+  pitch: initialRecord.pitch,
+  gentleMode: initialRecord.gentleMode,
+  autoMic: initialTuning.autoMic,
   micActive: false,
 
   // Cycle State Machine: 'idle' | 'calling' | 'listening'
@@ -241,6 +278,10 @@ function getActiveCatalog() {
 
 function getActivePresets() {
   return state.species === 'dog' ? DOG_SCENARIO_PRESETS : SCENARIO_PRESETS;
+}
+
+function persistTuning() {
+  saveTuning(tuningStorage, state.tuning);
 }
 
 function getDefaultSpots() {
@@ -490,7 +531,7 @@ themeToggleBtn.addEventListener('click', () => {
 /**
  * Species Mode Toggle (Cat Mode ↔ Dog Mode)
  */
-function applySpeciesMode(species, shouldSelectDefaultPreset = true) {
+function applySpeciesMode(species, { persist = false } = {}) {
   try {
     if (state.cycleRunning) {
       stopCallListenCycle();
@@ -640,15 +681,50 @@ function applySpeciesMode(species, shouldSelectDefaultPreset = true) {
     state.hidingSpots = getDefaultSpots();
   }
 
-  if (shouldSelectDefaultPreset) {
-    const presets = getActivePresets();
-    selectPreset(presets[0]);
-  } else {
-    renderPresets();
-    renderQueueStrip();
-    renderSoundPads();
-    updateTransportHeader();
+  const record = state.tuning[state.species];
+  const preset = getPresetById(getActivePresets(), record.presetId);
+
+  state.activePresetId = preset.id;
+  state.queue = [...preset.sequence];
+  state.queueIndex = 0;
+  state.selectedSoundId = preset.sequence[0];
+  state.callSeconds = record.callSeconds;
+  state.listenSeconds = record.listenSeconds;
+  state.pitch = record.pitch;
+  state.gentleMode = record.gentleMode;
+  state.volume = state.tuning.volume;
+  state.autoMic = state.tuning.autoMic;
+
+  // Restore the controls programmatically. Never dispatch input/change here:
+  // a synthetic change would enable the microphone or write storage on load.
+  callDurationSlider.value = String(state.callSeconds);
+  listenDurationSlider.value = String(state.listenSeconds);
+  pitchSlider.value = String(state.pitch);
+  volumeSlider.value = String(state.volume);
+  gentleModeSwitch.checked = state.gentleMode;
+  gentleModeSwitch.setAttribute('aria-checked', String(state.gentleMode));
+  autoMicSwitch.checked = state.autoMic;
+  autoMicSwitch.setAttribute('aria-checked', String(state.autoMic));
+
+  syncSliderCustomProps(callDurationSlider);
+  syncSliderCustomProps(listenDurationSlider);
+  syncSliderCustomProps(pitchSlider);
+  syncSliderCustomProps(volumeSlider);
+
+  audioEngine.setVolume(state.volume / 100);
+  audioEngine.setPitch(state.pitch / 100);
+  audioEngine.setGentleMode(state.gentleMode);
+
+  updateTuningLabels();
+  renderPresets();
+  renderQueueStrip();
+  renderSoundPads();
+  updateTransportHeader();
+
+  if (persist) {
+    persistTuning();
   }
+
   updateCycleButtons();
   updateRadarControls();
   renderDetectionLog();
@@ -658,7 +734,7 @@ function applySpeciesMode(species, shouldSelectDefaultPreset = true) {
 function handleSpeciesSwitch(targetSpecies) {
   if (!targetSpecies) return;
   if (targetSpecies !== state.species) {
-    applySpeciesMode(targetSpecies, true);
+    applySpeciesMode(targetSpecies, { persist: true });
   }
 }
 
@@ -716,6 +792,7 @@ function selectPreset(preset) {
   state.listenSeconds = preset.listenSeconds;
   state.gentleMode = preset.gentleMode;
   state.pitch = Math.round(preset.pitch * 100);
+  state.tuning = setSpeciesPreset(state.tuning, state.species, preset);
 
   callDurationSlider.value = String(state.callSeconds);
   listenDurationSlider.value = String(state.listenSeconds);
@@ -735,6 +812,7 @@ function selectPreset(preset) {
   renderQueueStrip();
   renderSoundPads();
   updateTransportHeader();
+  persistTuning();
 }
 
 /**
@@ -1103,33 +1181,45 @@ function updateTuningLabels() {
 
 volumeSlider.addEventListener('input', () => {
   state.volume = Number(volumeSlider.value);
+  state.tuning = setGlobalValue(state.tuning, 'volume', state.volume);
   audioEngine.setVolume(state.volume / 100);
   updateTuningLabels();
+  persistTuning();
 });
 
 pitchSlider.addEventListener('input', () => {
   state.pitch = Number(pitchSlider.value);
+  state.tuning = setSpeciesValue(state.tuning, state.species, 'pitch', state.pitch);
   audioEngine.setPitch(state.pitch / 100);
   updateTuningLabels();
+  persistTuning();
 });
 
 callDurationSlider.addEventListener('input', () => {
   state.callSeconds = Number(callDurationSlider.value);
+  state.tuning = setSpeciesValue(state.tuning, state.species, 'callSeconds', state.callSeconds);
   updateTuningLabels();
+  persistTuning();
 });
 
 listenDurationSlider.addEventListener('input', () => {
   state.listenSeconds = Number(listenDurationSlider.value);
+  state.tuning = setSpeciesValue(state.tuning, state.species, 'listenSeconds', state.listenSeconds);
   updateTuningLabels();
+  persistTuning();
 });
 
 gentleModeSwitch.addEventListener('change', () => {
   state.gentleMode = gentleModeSwitch.checked;
+  state.tuning = setSpeciesValue(state.tuning, state.species, 'gentleMode', state.gentleMode);
   audioEngine.setGentleMode(state.gentleMode);
+  persistTuning();
 });
 
 autoMicSwitch.addEventListener('change', async () => {
   state.autoMic = autoMicSwitch.checked;
+  state.tuning = setGlobalValue(state.tuning, 'autoMic', state.autoMic);
+  persistTuning();
   if (state.autoMic && !state.micActive) {
     const res = await audioEngine.enableMicrophoneRadar();
     state.micActive = res.active;
@@ -1512,7 +1602,7 @@ function init() {
   }
 
   try {
-    applySpeciesMode(state.species, true);
+    applySpeciesMode(state.species);
   } catch (err) {
     console.error('Species mode init error:', err);
   }
